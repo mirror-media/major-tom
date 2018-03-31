@@ -7,6 +7,11 @@ RUN apk update \
     && apk add curl \
     && curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl \
     && chmod +x ./kubectl \
-    && mv ./kubectl /usr/local/bin/kubectl
+    && mv ./kubectl /usr/local/bin/kubectl \
+    && curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz \
+    && mkdir -p /usr/local/gcloud \
+    && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
+    && /usr/local/gcloud/google-cloud-sdk/install.sh \
+    && export PATH=$PATH:/usr/local/gcloud/google-cloud-sdk/bin
 
 CMD ["./bin/hubot","--adapter","slack"]
