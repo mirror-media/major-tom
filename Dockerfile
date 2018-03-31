@@ -1,6 +1,6 @@
 FROM node:9-alpine
 
-RUN groupadd user && useradd --create-home --home-dir /home/user -g user user
+# RUN groupadd user && useradd --create-home --home-dir /home/user -g user user
 
 COPY . .
 RUN apk update \
