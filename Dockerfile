@@ -1,6 +1,7 @@
 FROM node:9-alpine
 
 # RUN groupadd user && useradd --create-home --home-dir /home/user -g user user
+ENV PATH="$PATH:/usr/local/gcloud/google-cloud-sdk/bin"
 
 COPY . .
 RUN apk update \
@@ -11,7 +12,6 @@ RUN apk update \
     && curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz \
     && mkdir -p /usr/local/gcloud \
     && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
-    && /usr/local/gcloud/google-cloud-sdk/install.sh \
-    && export PATH=$PATH:/usr/local/gcloud/google-cloud-sdk/bin
-
+    && /usr/local/gcloud/google-cloud-sdk/install.sh 
+    
 CMD ["./bin/hubot","--adapter","slack"]
