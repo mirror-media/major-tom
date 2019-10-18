@@ -1,19 +1,16 @@
 require('dotenv').config();
 
-const cacrtPath = process.env.CERT_PATH
-const tokenPath = process.env.TOKEN_PATH
-const apiUrl = process.env.HUBOT_CLUSTER === "mirrormedia" ? process.env.MIRROR_K8S_SERVER : process.env.READR_K8S_SERVER
+const kubernetesClient = require('kubernetes-client');
 
-const Client = require('kubernetes-client').Client
-const fs = require("fs")
-const client = new Client({ config:{
-    url: apiUrl,
-    ca: fs.readFileSync(cacrtPath).toString(),
-    auth: {
-        bearer: fs.readFileSync(tokenPath).toString(), 
-    },
-    timeout: 1500 
-} , version: '1.9' })
+const Client = kubernetesClient.Client;
+const config = kubernetesClient.config;
+
+// const inCluster = process.env.NODE_ENV === "production";//you can determine this your way
+
+const client = new Client({
+  config: process.env.NODE_ENV === "production" ? config.getInCluster() : config.fromKubeconfig(),
+  version: "1.9"//there is a list in docs of the options you have
+});
 
 function osCmd(command, arguments) {
     const
