@@ -6,12 +6,12 @@
   "description": "A simple robot for mirrormedia",
   "dependencies": {
     "@google-cloud/storage": "^1.6.0",
+    "dotenv": "^8.2.0",
     "hubot": "^2.19.0",
     "hubot-diagnostics": "0.0.2",
     "hubot-google-images": "^0.2.7",
     "hubot-google-translate": "^0.2.1",
     "hubot-help": "^0.2.2",
-    "hubot-heroku-keepalive": "^1.0.3",
     "hubot-maps": "0.0.3",
     "hubot-pugme": "^0.1.1",
     "hubot-redis-brain": "0.0.4",
