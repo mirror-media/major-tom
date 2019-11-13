@@ -1,0 +1,32 @@
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "name": "canaryName",
+        "namespace": "dist",
+        "labels": {
+            "app": "canaryName"
+        }
+    },
+    "spec": {
+        "replicas": 1,
+        "selector": {
+            "matchLabels": {
+               "app": "canaryName"
+            }
+        },
+        "template": {
+            "metadata":{
+                "labels": {
+                    "app": "canaryName"
+                }
+            },
+            "spec": {
+                "containers": [{
+                    "image": "version",
+                    "name": "canaryName"
+                }]
+            }
+        }
+    }
+}
