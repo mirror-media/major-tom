@@ -1,4 +1,11 @@
-const {GCP_KEYFILE,GCP_PROJECT_ID, } = require('./config')
+require('dotenv').config()
+
+// 
+const GCP_KEYFILE = process.env.GCP_KEYFILE
+const GCP_PROJECT_ID = process.env.GCP_PROJECT_ID
+
+// const {GCP_KEYFILE,GCP_PROJECT_ID, } = require('./config')
+
 const storage = require('@google-cloud/storage')
 const fs = require('fs')
 
