@@ -19,7 +19,7 @@ pipeline:
     secrets: [google_credentials]
     commands:
     - gcloud source repos clone configs configs
-    - cp readr-media/major-tom/.env .env
+    - cp configs/readr-media/major-tom/.env .env
     - cp configs/gcskeyfile.json ./gcskeyfile.json
     - rm -rf configs
     when:
