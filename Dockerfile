@@ -2,6 +2,7 @@ FROM node:9-alpine
 
 # RUN groupadd user && useradd --create-home --home-dir /home/user -g user user
 ENV PATH="$PATH:/usr/local/gcloud/google-cloud-sdk/bin"
+ENV NODE_ENV="production"
 
 COPY . .
 RUN apk update \
