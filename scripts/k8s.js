@@ -1,6 +1,5 @@
 require('dotenv').config()
 
-// 
 const GCS_FILE_BUCKET = process.env.GCS_FILE_BUCKET
 const GCS_BUCKET_PATH = process.env.GCS_BUCKET_PATH
 const {initBucket, uploadFileToBucket, readdirAsync, makeFilePublic, } = require('./gcs.js');
