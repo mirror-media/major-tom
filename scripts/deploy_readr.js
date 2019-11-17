@@ -6,7 +6,7 @@ module.exports = function(robot){
     msg.send("I am Tor")
   })
 
-  robot.respond(/version\s+dev\s+(readr-site-mobile|readr-site|news-projects|readr-restful)/i, async msg => {
+  robot.respond(/version\s+rr\s+(readr-site-mobile|readr-site|news-projects|readr-restful)/i, async msg => {
     let deployName = msg.match[1];
     
     try {
@@ -17,7 +17,7 @@ module.exports = function(robot){
     }
   });
 
-  robot.respond(/deploy\s+dev\s+(readr-site-mobile|readr-site|news-projects-canary|news-projects|readr-restful)\s+(.+)/i, async msg => {
+  robot.respond(/deploy\s+rr\s+(readr-site-mobile|readr-site|news-projects-canary|news-projects|readr-restful)\s+(.+)/i, async msg => {
     const deployName = msg.match[1];
     const fullImage = "gcr.io/mirrormedia-1470651750304/" + deployName + ":" + msg.match[2];
     const canaryName = `${deployName}-canary`
@@ -68,7 +68,7 @@ module.exports = function(robot){
     }
   })
 
-  robot.respond(/upload\s+dist\s+dev\s+(readr-site-mobile|readr-site|news-projects)\s+(.+)/i, async msg => {
+  robot.respond(/upload\s+dist\s+rr\s+(readr-site-mobile|readr-site|news-projects)\s+(.+)/i, async msg => {
     
     const deployName = msg.match[1];
     const fullImage = "gcr.io/mirrormedia-1470651750304/" + deployName + ":" + msg.match[2];
