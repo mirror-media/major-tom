@@ -30,7 +30,8 @@ pipeline:
     image: node
     group: build
     commands:
-    - rm scripts/deploy_mirrormedia.js scripts/deploy_readr.js
+    - rm scripts/deploy_*.js
+    - cp scripts/deploy/deploy_dev.js ./scripts/deploy_dev.js
     - npm install
     when:
       event: push
@@ -40,7 +41,8 @@ pipeline:
     image: node
     group: build
     commands:
-    - rm scripts/deploy_mirrormedia.js scripts/deploy_dev.js
+    - rm scripts/deploy_*.js
+    - cp scripts/deploy/deploy_readr.js scripts/deploy_readr.js
     - npm install
     when:
       event: push
@@ -50,7 +52,8 @@ pipeline:
     image: node
     group: build
     commands:
-    - rm scripts/deploy_readr.js scripts/deploy_dev.js
+    - rm scripts/deploy_*.js
+    - rm scripts/deploy/deploy_mirrormedia.js scripts/deploy_mirrormedia.js
     - npm install
     when:
       event: push
