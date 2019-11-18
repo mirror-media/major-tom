@@ -48,16 +48,16 @@ pipeline:
       event: push
       branch: master
 
-  build-mirrormedia:
-    image: node
-    group: build
-    commands:
-    - rm -f scripts/deploy_*.js
-    - cp scripts/deploy/deploy_mirrormedia.js scripts/deploy_mirrormedia.js
-    - npm install
-    when:
-      event: push
-      branch: master
+  # build-mirrormedia:
+  #   image: node
+  #   group: build
+  #   commands:
+  #   - rm -f scripts/deploy_*.js
+  #   - cp scripts/deploy/deploy_mirrormedia.js scripts/deploy_mirrormedia.js
+  #   - npm install
+  #   when:
+  #     event: push
+  #     branch: master
 
   publish-dev:
     image: plugins/gcr
@@ -83,17 +83,17 @@ pipeline:
       event: push
       branch: master
 
-  publish-mirrormedia:
-    image: plugins/gcr
-    repo: mirrormedia-1470651750304/${DRONE_REPO_NAME}
-    tag: mirrormedia-${DRONE_COMMIT_SHA:0:7}
-    group: publish
-    environment:
-      - DOCKER_LAUNCH_DEBUG=true
-    secrets: [google_credentials]
-    when:
-      event: push
-      branch: master
+  # publish-mirrormedia:
+  #   image: plugins/gcr
+  #   repo: mirrormedia-1470651750304/${DRONE_REPO_NAME}
+  #   tag: mirrormedia-${DRONE_COMMIT_SHA:0:7}
+  #   group: publish
+  #   environment:
+  #     - DOCKER_LAUNCH_DEBUG=true
+  #   secrets: [google_credentials]
+  #   when:
+  #     event: push
+  #     branch: master
 
   deploy-dev:
     image: nytimes/drone-gke:develop
@@ -135,25 +135,25 @@ pipeline:
       event: push
       branch: master
   
-  deploy-mirrormedia:
-    image: nytimes/drone-gke:develop
-    zone: asia-east1-a
-    cluster: mirrormedia-production
-    namespace: default
-    group: deploy
-    # For debugging
-    dry_run: false
-    verbose: true
-    secrets:
-      - source: google_credentials
-        target: token
-    template: manifests/major-tom/mirrormedia.yaml
-    vars:
-      image: gcr.io/mirrormedia-1470651750304/${DRONE_REPO_NAME}:mirrormedia-${DRONE_COMMIT_SHA:0:7}
-      app: major-tom
-    when:
-      event: push
-      branch: master
+  # deploy-mirrormedia:
+  #   image: nytimes/drone-gke:develop
+  #   zone: asia-east1-a
+  #   cluster: mirrormedia-production
+  #   namespace: default
+  #   group: deploy
+  #   # For debugging
+  #   dry_run: false
+  #   verbose: true
+  #   secrets:
+  #     - source: google_credentials
+  #       target: token
+  #   template: manifests/major-tom/mirrormedia.yaml
+  #   vars:
+  #     image: gcr.io/mirrormedia-1470651750304/${DRONE_REPO_NAME}:mirrormedia-${DRONE_COMMIT_SHA:0:7}
+  #     app: major-tom
+  #   when:
+  #     event: push
+  #     branch: master
   
   finish_slack:
     image: plugins/slack
