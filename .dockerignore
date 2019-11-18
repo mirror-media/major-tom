@@ -1,0 +1,4 @@
+# template used in CI
+manifests/major-tom
+# 
+scripts/deploy/*.js
