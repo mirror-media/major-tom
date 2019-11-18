@@ -75,7 +75,6 @@ pipeline:
     - npm install
     when:
       event: tag
-      branch: master
 
   publish-readr:
     image: plugins/gcr
@@ -86,7 +85,6 @@ pipeline:
     secrets: [google_credentials]
     when:
       event: tag
-      branch: master
 
   deploy-readr:
     image: nytimes/drone-gke
@@ -105,7 +103,6 @@ pipeline:
       app: major-tom
     when:
       event: tag
-      branch: master
 
   build-mirrormedia:
     image: node
@@ -116,7 +113,6 @@ pipeline:
     - npm install
     when:
       event: tag
-      branch: master
 
   publish-mirrormedia:
     image: plugins/gcr
@@ -127,7 +123,6 @@ pipeline:
     secrets: [google_credentials]
     when:
       event: tag
-      branch: master
   
   deploy-mirrormedia:
     image: nytimes/drone-gke
@@ -146,7 +141,6 @@ pipeline:
       app: major-tom
     when:
       event: tag
-      branch: master
   
   finish-slack:
     image: plugins/slack

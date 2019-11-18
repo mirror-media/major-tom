@@ -1,4 +1,5 @@
-# template used in CI
+# used in CI
 manifests/major-tom
-# 
-scripts/deploy/*.js
+.drone.yml
+# Deploy scripts already taken care of in CI
+scripts/deploy
