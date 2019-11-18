@@ -1,6 +1,6 @@
 workspace:
-  base: /hubot
-  path: src/github.com/ichiaohsu/mmhubot
+  base: /ci
+  path: major-tom
 pipeline:
   start_slack:
     image: plugins/slack
@@ -37,12 +37,10 @@ pipeline:
       event: push
       branch: dev
 
-  build-readr:
+  build:
     image: node
     group: build
     commands:
-    - rm -f scripts/deploy_*.js
-    - cp scripts/deploy/deploy_readr.js scripts/deploy_readr.js
     - npm install
     when:
       event: push
@@ -66,15 +64,18 @@ pipeline:
     group: publish
     environment:
       - DOCKER_LAUNCH_DEBUG=true
+    commands:
+    - rm -f scripts/deploy_*.js
+    - cp scripts/deploy/deploy_${CLUSTER}.js ./scripts/deploy_${CLUSTER}.js
     secrets: [google_credentials]
     when:
       event: push
       branch: dev
 
-  publish-readr:
+  publish:
     image: plugins/gcr
     repo: mirrormedia-1470651750304/${DRONE_REPO_NAME}
-    tag: readr-${DRONE_COMMIT_SHA:0:7}
+    tag: ${CLUSTER-${DRONE_COMMIT_SHA:0:7}
     group: publish
     environment:
       - DOCKER_LAUNCH_DEBUG=true
@@ -116,7 +117,7 @@ pipeline:
       branch: dev
   
   deploy-readr:
-    image: nytimes/drone-gke:develop
+    image: nytimes/drone-gke
     zone: asia-east1-a
     cluster: prod-readr
     namespace: default
@@ -172,3 +173,8 @@ pipeline:
       {{else}}
         Houston, we have a problem. Build <${DRONE_BUILD_LINK}|#{{build.number}}> failed. Fix me please, {{build.author}}
       {{/success}}
+
+matrix:
+  CLUSTER:
+    - mirrormedia
+    - readr
