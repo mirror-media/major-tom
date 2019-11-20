@@ -2,7 +2,7 @@ const {getDeployVersion, uploadDist, patchDeployment} = require('./k8s.js');
 
 module.exports = function(robot){
   
-  robot.respond(/who are you/i, msg => {
+  robot.respond(/assemble/i, msg => {
     msg.send("I am Tor")
   })
 
@@ -18,6 +18,7 @@ module.exports = function(robot){
   });
 
   robot.respond(/deploy\s+rr\s+(readr-site-mobile|readr-site|news-projects-canary|news-projects|readr-restful)\s+(.+)/i, async msg => {
+    msg.send("launching deploy sequences")
     const deployName = msg.match[1];
     const fullImage = "gcr.io/mirrormedia-1470651750304/" + deployName + ":" + msg.match[2];
     const canaryName = `${deployName}-canary`

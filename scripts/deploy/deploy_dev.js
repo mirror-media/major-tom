@@ -2,8 +2,8 @@ const {getDeployVersion, uploadDist, patchDeployment} = require('./k8s.js');
 
 module.exports = function(robot){
   
-  robot.respond(/who are you/i, msg => {
-    msg.send("I am Tor")
+  robot.respond(/assemble/i, msg => {
+    msg.send("I am Tod")
   })
 
   robot.respond(/version\s+dev\s+(readr-site-mobile|readr-site|news-projects|readr-restful)/i, async msg => {
