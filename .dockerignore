@@ -1,5 +1,4 @@
 # used in CI
 manifests/major-tom
-.drone.yml
 # Deploy scripts already taken care of in CI
 scripts/deploy
