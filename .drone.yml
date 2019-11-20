@@ -84,8 +84,7 @@ pipeline:
       - DOCKER_LAUNCH_DEBUG=true
     secrets: [google_credentials]
     when:
-      branch: master
-      event: push
+      event: tag
 
   deploy-readr:
     image: nytimes/drone-gke
@@ -103,8 +102,7 @@ pipeline:
       image: gcr.io/mirrormedia-1470651750304/${DRONE_REPO_NAME}:readr-${DRONE_TAG}
       app: major-tom
     when:
-      branch: master
-      event: push
+      event: tag
 
   build-mirrormedia:
     image: node
@@ -114,8 +112,7 @@ pipeline:
     - cp scripts/deploy/deploy_mirrormedia.js scripts/deploy_mirrormedia.js
     - npm install
     when:
-      branch: master
-      event: push
+      event: tag
 
   publish-mirrormedia:
     image: plugins/gcr
@@ -125,8 +122,7 @@ pipeline:
       - DOCKER_LAUNCH_DEBUG=true
     secrets: [google_credentials]
     when:
-      branch: master
-      event: push
+      event: tag
   
   deploy-mirrormedia:
     image: nytimes/drone-gke
@@ -144,8 +140,7 @@ pipeline:
       image: gcr.io/mirrormedia-1470651750304/${DRONE_REPO_NAME}:mirrormedia-${DRONE_TAG}
       app: major-tom
     when:
-      branch: master
-      event: push
+      event: tag
   
   finish-slack:
     image: plugins/slack
