@@ -85,7 +85,7 @@ const uploadDist = async (namespace, deployment, version, distribution) => {
         case 200:
         // Scale canary to 1
             try {
-                const patchCanary = await patchDeployment(namespace, deployment, {
+                await patchDeployment(namespace, deployment, {
                     body: {
                         spec: {
                             replicas: 1,
@@ -153,7 +153,7 @@ const uploadDist = async (namespace, deployment, version, distribution) => {
         throw err;
     }
 
-    const result = await Promise.all(files.map( (filename) => {
+    await Promise.all(files.map( (filename) => {
         return uploadFileToBucket(bucket, `${distFolder}/${filename}`, {
             destination: `${destination}/${filename}`,
         }).then((bucketFile) => {
@@ -198,16 +198,14 @@ const patchDeployment = async (namespace, name, patchData) => {
     const checkInterval = 2000;
     const checkTimeout = 30000;
 
-    let interval; let timeout;
-
     // Set Timeout for watch
-    timeout = setTimeout(async () => {
+    const timeout = setTimeout(async () => {
         clearInterval(interval);
         throw `Timeout: ${checkTimeout}`;
     }, checkTimeout);
 
     // Check deployment for every checkInterval
-    interval = setInterval(async () => {
+    const interval = setInterval(async () => {
         const deployment = await client.apis.apps.v1.namespaces(namespace).deployments(name).get();
         // There is no unavailableReplicas means all pods are available
         if (deployment.body.status.unavailableReplicas === undefined) {
@@ -218,33 +216,6 @@ const patchDeployment = async (namespace, name, patchData) => {
         }
     }, checkInterval);
 };
-
-// Scale deployment in specified namespace
-const scaleDeploy = async (ns, deployName, rep) => {
-    console.log(`scaleDeploy ${deployName} in ${ns} to ${rep}`);
-    try {
-        const scaleDeploy = await client.apis.apps.v1.namespaces(ns).deployments(deployName).patch({
-            body: {
-                spec: {
-                    replicas: rep,
-                },
-            },
-        });
-        console.log(scaleDeploy.body.status.conditions);
-        return scaleDeploy.statusCode;
-    } catch (err) {
-        console.log(err);
-        throw `scale deployment ${ns}:${deployName} failed`;
-    }
-};
-
-// function osCmd(command, arguments) {
-//     const
-//       { spawnSync } = require( 'child_process'),
-//       cmd = spawnSync(command, arguments)
-//       console.log( `kubectl result: stdout: ${cmd.stdout.toString()}` )
-//       console.log( `kubectl result: stderr: ${cmd.stderr.toString()}` )
-// }
 
 // shell command
 async function sh(cmd) {
@@ -258,19 +229,6 @@ async function sh(cmd) {
         });
     });
 }
-
-const main = async () => {
-    try {
-        const deploy = await client.apis.apps.v1.namespaces('dist').deployments('news-projects-canary').get();
-        // let deploy = await client.api.v1.namespaces("dist").deployments("news-projects-canary").get()
-        if (deploy.statusCode === 200) {
-            console.log(deploy);
-        }
-    } catch (err) {
-        console.error(err);
-    }
-};
-// main()
 
 module.exports = {
     client,
