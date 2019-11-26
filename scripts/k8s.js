@@ -15,7 +15,7 @@ const util = require('util');
 
 const readfileAsync = util.promisify(fs.readFile);
 
-exec = require('child_process').exec;
+const exec = require('child_process').exec;
 
 const client = new Client({
     config: process.env.NODE_ENV === 'production' ? config.getInCluster() : config.fromKubeconfig(),
@@ -44,6 +44,7 @@ const getDeployVersion = async (ns, deployName) => {
         }
         return version;
     } catch (err) {
+        console.error(`get deploy version failed.`, err);
         throw `error status: ${err.statusCode}`;
     }
 };
@@ -52,6 +53,8 @@ const getDeployVersion = async (ns, deployName) => {
 const replaceAll = (str, find, replace) => {
     return str.replace(new RegExp(find, 'g'), replace);
 };
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Open canary-template.json, and use it to create a "deployment" in "namespace" with new "version"
 const createCanary = async (namespace, deployment, version) => {
@@ -62,128 +65,116 @@ const createCanary = async (namespace, deployment, version) => {
         const template = await readfileAsync(path.resolve(__dirname, '../manifests/canary-template.json'), 'utf8');
         deployManifest = JSON.parse(replaceAll(template, 'canaryName', deployment));
         deployManifest.spec.template.spec.containers[0].image = version;
-    } catch (err) {
-        console.log(err);
-        return err;
-    }
-    // create deployment
-    try {
+
         const create = await client.apis.apps.v1.namespaces(namespace).deployments.post({body: deployManifest});
-        console.log(create.statusCode); // 201 if success
-    } catch (err) {
-        console.log(err);
-        return err;
+        console.log(`createCanary success. statusCode: ${create.statusCode}`);
+    } catch (error) {
+        console.error(`createCanary failed`, error);
+        throw new Error(error);
     }
-    return 'create succeeded';
 };
 
 const uploadDist = async (namespace, deployment, version, distribution) => {
-    console.log(`creating canary ${deployment}:${version} in ${namespace} to copy ${distribution}`);  
+    console.log(`creating canary ${deployment}:${version} in ${namespace} to copy ${distribution}`);
     try {
         const deploy = await client.apis.apps.v1.namespaces(namespace).deployments(deployment).get();
         console.log(`deploy status: ${deploy.statusCode}`);
         switch (deploy.statusCode) {
         case 200:
-        // Scale canary to 1
-            try {
-                await patchDeployment(namespace, deployment, {
-                    body: {
-                        spec: {
-                            replicas: 1,
-                            template: {
-                                spec: {
-                                    containers: [{
-                                        name: deployment,
-                                        image: version,
-                                    }],
-                                },
+            // Scale canary to 1
+            await patchDeployment(namespace, deployment, {
+                body: {
+                    spec: {
+                        replicas: 1,
+                        template: {
+                            spec: {
+                                containers: [{
+                                    name: deployment,
+                                    image: version,
+                                }],
                             },
                         },
                     },
-                });
-                console.log(`scale ${deployment} to 1`);
-            } catch (err) {
-                throw err;
-            }
+                },
+            });
+            console.log(`scale ${deployment} to 1`);
             break;
 
         default:
-            throw new Error(`Exception: ${deploy.statusCode}`);
+            throw new Error('error finding or creating canary');
         }
     } catch (err) {
-        console.log(`finding ${deployment} error`);
+        console.error(`finding ${deployment} error.`, err);
         try {
-            const deploy = await createCanary(namespace, deployment, version);
-            console.log(deploy);
+            await createCanary(namespace, deployment, version);
         } catch (err) {
-            console.log(err);
             throw err;
         }
     }
+
     // Create delay for pods to be ready. There is a gap between status ready to actual ready
-    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     await sleep(3000);
 
-    // Get pod's name and copy dist
+    // Get pod's name
     let canaryPod;
     try {
         const pod = await client.api.v1.namespaces(namespace).pods.get({qs: {labelSelector: `app=${deployment}`}});
-        console.log("canary pods info:", pod);
         canaryPod = pod.body.items[0].metadata.name;
-        console.log(`Found canary pod name: ${canaryPod}`);
+        console.log('canary pods info:', pod, `Found canary pod name: ${canaryPod}`);
     } catch (err) {
+        console.error(`get pod's name failed`, err);
         throw err;
     }
-
 
     // Copy dist file out
     const distFolder = `./dist/${canaryPod}`;
     try {
         const {stdout, stderr} = await sh(`kubectl -n dist cp ${canaryPod}:/usr/src/${distribution} ${distFolder}`);
-        console.log(`kubectl cp: ${stdout}`);
-        console.log(`kubectl cp: ${stderr}`);
+        console.log(`kubectl cp stdout:`, stdout);
+        console.log(`kubectl cp stderr:`, stderr);
     } catch (err) {
+        console.error(`copy dist file out failed`, err);
         throw err;
     }
 
     // Upload dist
+    let files;
     const bucket = initBucket(GCS_FILE_BUCKET);
     const destination = GCS_BUCKET_PATH;
     try {
         files = await readdirAsync(distFolder);
     } catch (err) {
+        console.error(`upload dist failed`, err);
         throw err;
     }
 
-    await Promise.all(files.map( (filename) => {
+    Promise.all(files.map((filename) => {
         return uploadFileToBucket(bucket, `${distFolder}/${filename}`, {
             destination: `${destination}/${filename}`,
         }).then((bucketFile) => {
             console.log(`file ${filename} upload to gcs successfully.`);
             makeFilePublic(bucketFile);
         }).catch((err) => {
-            console.log(`Error code: ${err.code}`);
+            console.log(`uploadFileToBucket error. error code: ${err.code}`);
         });
     }))
-        .then(async () => {
-            await sh(`rm -rf ${distFolder}`);
+        .then(() => {
+            sh(`rm -rf ${distFolder}`);
             console.log('finished removing dist temp files');
-        }).catch( (err) => {
-            console.log(err);
-        });
-
-    try {
-        await patchDeployment(namespace, deployment, {
-            body: {
-                spec: {
-                    replicas: 0,
+        })
+        .then(() => {
+            patchDeployment(namespace, deployment, {
+                body: {
+                    spec: {
+                        replicas: 0,
+                    },
                 },
-            },
+            });
+            console.log(`scale ${deployment}:${namespace} to 0`);
+        })
+        .catch((err) => {
+            console.error(`removing dist temp files or patch deployment failed`, err);
         });
-        console.log(`scale ${deployment}:${namespace} to 0`);
-    } catch (err) {
-        throw err;
-    }
 };
 
 // Patch a deployment with patchData, and watch it finishing the rollout
@@ -220,8 +211,9 @@ const patchDeployment = async (namespace, name, patchData) => {
 };
 
 // shell command
-async function sh(cmd) {
-    return new Promise( (resolve, reject) => {
+
+function sh(cmd) {
+    return new Promise((resolve, reject) => {
         exec(cmd, (err, stdout, stderr) => {
             if (err) {
                 reject(err);
