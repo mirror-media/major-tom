@@ -78,6 +78,7 @@ const createCanary = async (namespace, deployment, version) => {
 };
 
 const uploadDist = async (namespace, deployment, version, distribution) => {
+    console.log(`creating canary ${deployment}:${version} in ${namespace} to copy ${distribution}`);  
     try {
         const deploy = await client.apis.apps.v1.namespaces(namespace).deployments(deployment).get();
         console.log(`deploy status: ${deploy.statusCode}`);
@@ -100,19 +101,19 @@ const uploadDist = async (namespace, deployment, version, distribution) => {
                         },
                     },
                 });
-                console.log('scale news-project-canary to 1');
+                console.log(`scale ${deployment} to 1`);
             } catch (err) {
                 throw err;
             }
             break;
 
         default:
-            throw 'error finding or creating canary';
+            throw new Error(`Exception: ${deploy.statusCode}`);
         }
     } catch (err) {
-        console.log('finding news-projects-canary error');
+        console.log(`finding ${deployment} error`);
         try {
-            const deploy = await createCanary('dist', 'news-projects-canary', version);
+            const deploy = await createCanary(namespace, deployment, version);
             console.log(deploy);
         } catch (err) {
             console.log(err);
@@ -127,6 +128,7 @@ const uploadDist = async (namespace, deployment, version, distribution) => {
     let canaryPod;
     try {
         const pod = await client.api.v1.namespaces(namespace).pods.get({qs: {labelSelector: `app=${deployment}`}});
+        console.log("canary pods info:", pod);
         canaryPod = pod.body.items[0].metadata.name;
         console.log(`Found canary pod name: ${canaryPod}`);
     } catch (err) {
