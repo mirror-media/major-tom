@@ -38,6 +38,7 @@ module.exports = function(robot) {
             deploymentList.push('tr-projects-rest', 'tr-projects-app');
         }
 
+        console.log(`updating deployment list ${deploymentList} with ${fullImage}`)
         try {
             for (let i = 0; i < deploymentList.length; i++) {
                 await patchDeployment('default', deploymentList[i], {
@@ -46,7 +47,6 @@ module.exports = function(robot) {
                             template: {
                                 spec: {
                                     containers: [{
-                                        name: deploymentList[i],
                                         image: fullImage,
                                     }],
                                 },
@@ -54,7 +54,7 @@ module.exports = function(robot) {
                         },
                     },
                 });
-                msg.send(`${deploymentList} updated`);
+                msg.send(`deployment ${deploymentList[i]} updated`);
             }
         } catch (err) {
             msg.send(`Update deployment ${deployName} error: `, err);
