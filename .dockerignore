@@ -2,3 +2,5 @@
 manifests/major-tom
 # Deploy scripts already taken care of in CI
 scripts/deploy
+# temporary config repos
+configs

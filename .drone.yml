@@ -24,7 +24,7 @@ pipeline:
     - rm -rf configs
     when:
       event: [push, tag]
-      branch: [master, dev]
+      branch: [dev]
       
   build-dev:
     image: node
@@ -67,10 +67,20 @@ pipeline:
       event: [push]
       branch: dev
 
+  pull-config:
+    image: gcr.io/mirrormedia-1470651750304/drone-cloud-sdk:latest
+    secrets: [google_credentials]
+    commands:
+    - gcloud source repos clone configs configs
+    - cp configs/gcskeyfile.json ./gcskeyfile.json
+    when:
+      event: tag
+
   build-readr:
     image: node
     commands:
     - rm -f scripts/deploy_*.js 
+    - cp configs/readr-media/major-tom/.env .env
     - cp scripts/deploy/deploy_readr.js ./scripts/deploy_readr.js
     - npm install
     when:
@@ -109,6 +119,7 @@ pipeline:
     group: build
     commands:
     - rm -f scripts/deploy_*.js
+    - cp configs/mirror-media/major-tom/.env .env
     - cp scripts/deploy/deploy_mirrormedia.js scripts/deploy_mirrormedia.js
     - npm install
     when:
