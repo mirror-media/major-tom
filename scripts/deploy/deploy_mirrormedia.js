@@ -47,6 +47,7 @@ module.exports = function(robot) {
                             template: {
                                 spec: {
                                     containers: [{
+                                        name: deployName,
                                         image: fullImage,
                                     }],
                                 },
@@ -54,7 +55,7 @@ module.exports = function(robot) {
                         },
                     },
                 });
-                msg.send(`deployment ${deploymentList[i]} updated`);
+                msg.send(`deployment ${deployName} updated`);
             }
         } catch (err) {
             msg.send(`Update deployment ${deployName} error: `, err);
