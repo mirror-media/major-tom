@@ -148,7 +148,7 @@ const uploadDist = async (namespace, deployment, version, distribution) => {
     }
 
     // Get pod's name
-    const canaryPod = getReadyPod(namespace, deployment);
+    const canaryPod = await getReadyPod(namespace, deployment);
 
     // Copy dist file out
     const distFolder = `./dist/${canaryPod}`;
