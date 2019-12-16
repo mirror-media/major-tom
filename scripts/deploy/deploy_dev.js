@@ -42,7 +42,7 @@ module.exports = function(robot) {
                 await uploadDist('dist', canaryName, fullImage, distribution);
                 msg.send('dist uploaded.');
             } catch (err) {
-                msg.send(err);
+                return msg.send(err);
             }
         }
 

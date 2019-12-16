@@ -74,6 +74,41 @@ const createCanary = async (namespace, deployment, version) => {
     }
 };
 
+const getReadyPod = async (namespace, deployment) => {
+    let canaryPod, error;
+    let retry = 0
+    const MAXIMUM_RETRY = 3
+    const RETRY_TIMEOUT = 3000
+    do {
+        retry += 1
+        // Create delay for pods to be ready. There is a gap between status ready to actual ready
+        await sleep(RETRY_TIMEOUT);
+        // Get pod's name
+        try {
+            const pods = await client.api.v1.namespaces(namespace).pods.get({qs: {labelSelector: `app=${deployment}`}});
+            for (pod_index in pods.body.items) {
+                const continers = pods.body.items[pod_index].status.containerStatuses;
+                for (container_index in continers) {
+                    const container = continers[container_index];
+                    if (container.name === deployment && container.ready) {
+                        canaryPod = pods.body.items[pod_index].metadata.name;
+                    }
+                }
+            }
+        } catch (err) {
+            error = err
+            console.error(`get pod's name failed`, err, `retry count: `, retry);
+        }
+    } while (retry < MAXIMUM_RETRY && canaryPod === undefined);
+
+    if (error) {
+        throw err
+    } else {
+        console.log('canary pods info:', pod, `Found canary pod name: ${canaryPod}`);
+        return canaryPod
+    }
+}
+
 const uploadDist = async (namespace, deployment, version, distribution) => {
     console.log(`creating canary ${deployment}:${version} in ${namespace} to copy ${distribution}`);
     try {
@@ -112,19 +147,8 @@ const uploadDist = async (namespace, deployment, version, distribution) => {
         }
     }
 
-    // Create delay for pods to be ready. There is a gap between status ready to actual ready
-    await sleep(3000);
-
     // Get pod's name
-    let canaryPod;
-    try {
-        const pod = await client.api.v1.namespaces(namespace).pods.get({qs: {labelSelector: `app=${deployment}`}});
-        canaryPod = pod.body.items[0].metadata.name;
-        console.log('canary pods info:', pod, `Found canary pod name: ${canaryPod}`);
-    } catch (err) {
-        console.error(`get pod's name failed`, err);
-        throw err;
-    }
+    const canaryPod = getReadyPod(namespace, deployment);
 
     // Copy dist file out
     const distFolder = `./dist/${canaryPod}`;
@@ -213,10 +237,19 @@ const patchDeployment = async (namespace, name, patchData) => {
 // shell command
 
 function sh(cmd) {
+    const MAXIMUM_RETRY = 3;
+    const TIMEOUT = 3000;
+    retry_count = 1;
+
     return new Promise((resolve, reject) => {
-        exec(cmd, (err, stdout, stderr) => {
+        exec(cmd, {timeout: TIMEOUT}, (err, stdout, stderr) => {
             if (err) {
-                reject(err);
+                if (retry_count < MAXIMUM_RETRY) {
+                    retry_count += 1;
+                    resolve(sh(cmd, retry_count));
+                } else {
+                    reject(err);
+                }
             } else {
                 resolve({stdout, stderr});
             }
