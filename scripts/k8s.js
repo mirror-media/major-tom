@@ -104,7 +104,7 @@ const getReadyPod = async (namespace, deployment) => {
     if (error) {
         throw err
     } else {
-        console.log('canary pods info:', pod, `Found canary pod name: ${canaryPod}`);
+        console.log(`Found canary pod name: ${canaryPod}`);
         return canaryPod
     }
 }
