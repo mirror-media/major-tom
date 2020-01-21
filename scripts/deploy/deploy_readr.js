@@ -19,39 +19,16 @@ module.exports = function(robot) {
     robot.respond(/deploy\s+rr\s+(readr-site-mobile|readr-site|news-projects-canary|news-projects|readr-restful)\s+(.+)/i, async (msg) => {
         msg.send('launching deploy sequences');
         const deployName = msg.match[1];
-        const versionName = msg.match[2];
-        const fullImage = 'gcr.io/mirrormedia-1470651750304/' + deployName + ':' + versionName;
-        const canaryName = `${deployName}-canary`;
-        // check if version in the pattern master_*
-        if (deployName === 'news-projects') {
-            console.log('news-projects condition')
-            if ( !versionName.startsWith('master') ) {
+        const versionTag = msg.match[2];
+        const isFrontend = deployName !== 'readr-restful';
+
+        const fullImage = 'gcr.io/mirrormedia-1470651750304/' + deployName + ':' + versionTag;
+
+        // check if version in the pattern master*
+        if (isFrontend) {
+            if ( !versionTag.startsWith('master') ) {
                 return msg.send('invalid version. news-projects version should start with master');
             }
-        }
-
-        // Find distribution folder
-        let distribution;
-
-        switch (deployName) {
-        case 'readr-site-mobile':
-            distribution = 'distribution';
-            break;
-        case 'readr-site':
-            distribution = 'distribution';
-            break;
-        }
-        // Upload dist if it's not readr-restful
-        if ( (deployName !== 'readr-restful') && (deployName) !== 'news-projects' ) {
-            msg.send('launching dist uploading.');
-            try {
-                await uploadDist('dist', canaryName, fullImage, distribution);
-                msg.send('dist uploaded.');
-            } catch (err) {
-                return msg.send(err);
-            }
-        } else {
-            msg.send('skipping dist upload');
         }
 
         try {

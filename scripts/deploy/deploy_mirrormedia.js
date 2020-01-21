@@ -16,29 +16,26 @@ module.exports = function(robot) {
         }
     });
 
-    robot.respond(/deploy\s+mm\s+(plate-vue-mobile|tr-projects-rest|plate-vue|tr-projects-app)\s+(.+)/i, async (msg) => {
+    robot.respond(/deploy\s+mm\s+(tr-projects-rest|plate-vue|tr-projects-app)\s+(.+)/i, async (msg) => {
         msg.send('launching deploy sequences');
         const deployName = msg.match[1];
+        const versionTag = msg.match[2];
         const isBackend = deployName.startsWith('tr-projects');
         const repoName = isBackend ? 'tr-projects-rest' : deployName;
         const fullImage = `gcr.io/mirrormedia-1470651750304/${repoName}:${msg.match[2]}`;
-        const canaryName = `${deployName}-canary`;
         const deploymentList = [];
 
         if (!isBackend) {
             deploymentList.push(deployName);
-            msg.send('dists uploading ... ');
-            try {
-                await uploadDist('dist', canaryName, fullImage, 'dist');
-                msg.send('dist uploaded.');
-            } catch (err) {
-                return msg.send(err);
+            // Check if frontend image tag starts with "master"
+            if ( !versionTag.startsWith('master') ) {
+                return msg.send(`invalid version. ${deployName} version should start with master`);
             }
         } else {
             deploymentList.push('tr-projects-rest', 'tr-projects-app');
         }
 
-        console.log(`updating deployment list ${deploymentList} with ${fullImage}`)
+        console.log(`updating deployment list ${deploymentList} with ${fullImage}`);
         try {
             for (let i = 0; i < deploymentList.length; i++) {
                 await patchDeployment('default', deploymentList[i], {
