@@ -44,7 +44,7 @@ module.exports = function(robot) {
                             template: {
                                 spec: {
                                     containers: [{
-                                        name: deployName,
+                                        name: deploymentList[i],
                                         image: fullImage,
                                     }],
                                 },
