@@ -72,7 +72,7 @@ pipeline:
     secrets: [google_credentials]
     commands:
     - gcloud source repos clone configs configs
-    - cp configs/gcskeyfile.json ./gcskeyfile.json
+    - cp configs/major-tom/gcskeyfile.json ./gcskeyfile.json
     when:
       event: tag
 
