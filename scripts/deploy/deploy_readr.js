@@ -1,7 +1,7 @@
-const {getDeployVersion, uploadDist, patchDeployment} = require('./k8s.js');
-const {addImageTag} = require('./gcr.js');
+const { getDeployVersion, uploadDist, patchDeployment } = require('./k8s.js');
+const { addImageTag } = require('./gcr.js');
 
-module.exports = function(robot) {
+module.exports = function (robot) {
     robot.respond(/assemble/i, (msg) => {
         msg.send('I am Tor');
     });
@@ -27,11 +27,11 @@ module.exports = function(robot) {
 
         // check if version in the pattern master*
         if (isFrontend) {
-            if ( !versionTag.startsWith('master') ) {
+            if (!versionTag.startsWith('master')) {
                 return msg.send('invalid version. news-projects version should start with master');
             }
         } else {
-            if ( versionTag.split(" ").length != 2 ){
+            if (versionTag.split(" ").length != 2) {
                 return msg.send('invalid deploy command. Should specify the deploy version tag. \n "deploy rr readr-restful dev_Falsechord_711 1.1.0"')
             }
         }
@@ -59,13 +59,13 @@ module.exports = function(robot) {
         } else {
             const devTag = versionTag.split(" ")[0];
             const prodTag = versionTag.split(" ")[1];
-            
+
             addImageTag(devTag, prodTag, (err, fullDevTag) => {
                 if (err) {
-                     console.log(err);
+                    console.log(err);
                     return msg.send(`Update deployment ${deployName} error: ${err}`);
                 }
-                msg.send(`The new tag ${prodTag} has been set to image ${fullDevTag}, ${deployName} updated will be activated in a few minutes`);
+                msg.send(`The new tag ${prodTag} has been set to image ${fullDevTag}, ${deployName} will update in a few minutes`);
             });
         }
     });
@@ -77,15 +77,15 @@ module.exports = function(robot) {
         let distribution;
 
         switch (deployName) {
-        case 'readr-site-mobile':
-            distribution = 'distribution';
-            break;
-        case 'readr-site':
-            distribution = 'distribution';
-            break;
-        case 'news-projects':
-            distribution = 'dist';
-            break;
+            case 'readr-site-mobile':
+                distribution = 'distribution';
+                break;
+            case 'readr-site':
+                distribution = 'distribution';
+                break;
+            case 'news-projects':
+                distribution = 'dist';
+                break;
         }
         try {
             await uploadDist('dist', canaryName, fullImage, distribution);
