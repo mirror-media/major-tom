@@ -20,7 +20,7 @@ pipeline:
     commands:
     - gcloud source repos clone configs configs
     - cp configs/readr-media/major-tom/.env .env
-    - cp configs/gcskeyfile.json ./gcskeyfile.json
+    - cp configs/major-tom/gcskeyfile.json ./gcskeyfile.json
     - rm -rf configs
     when:
       event: [push, tag]
