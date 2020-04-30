@@ -3,6 +3,7 @@ FROM node:9-alpine
 # RUN groupadd user && useradd --create-home --home-dir /home/user -g user user
 ENV PATH="$PATH:/usr/local/gcloud/google-cloud-sdk/bin"
 ENV NODE_ENV="production"
+ENV GOOGLE_APPLICATION_CREDENTIALS="gcskeyfile.json"
 
 COPY . .
 RUN apk update \
@@ -14,5 +15,5 @@ RUN apk update \
     && mkdir -p /usr/local/gcloud \
     && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
     && /usr/local/gcloud/google-cloud-sdk/install.sh 
-    
+
 CMD ["./bin/hubot","--adapter","slack"]
