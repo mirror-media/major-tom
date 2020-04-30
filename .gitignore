@@ -4,6 +4,5 @@ node_modules
 .gitignore
 scripts/config.js
 *.swp
-.env
 dist
 gcskeyfile.json
