@@ -32,5 +32,3 @@ spec:
         imagePullPolicy: Always
         name: {{.app}}
       restartPolicy: Always
-      serviceAccount: hubot
-      serviceAccountName: hubot
