@@ -38,12 +38,12 @@ const getGCRTags = async (deployName, devTag, callback) => {
 
         const rets = stdout.split("\n");
         if (rets.length > 0) {
-            const tags = rets[1].replace('"', '').split(',');
+            const tags = rets[1].replace(/"/g, '').split(',');
             const gitOpsProdTags = tags.sort().reverse().join(', ');
-            return callback(null, `(${gitOpsProdTags})`);
+            return callback(null, `[${gitOpsProdTags}]`);
         }
 
-        return callback(null, `(${devTag})`);
+        return callback(null, `[${devTag}]`);
     });
 }
 
