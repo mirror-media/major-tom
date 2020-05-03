@@ -1,23 +1,37 @@
-const {getDeployVersion, uploadDist, patchDeployment} = require('./k8s.js');
+const { getDeployVersion, uploadDist, patchDeployment } = require('./k8s.js');
+const { addImageTag, getGCRTags } = require('./gcr.js');
 
-module.exports = function(robot) {
+const allowedServices = [
+    "plate-vue-mobile",
+    "plate-vue",
+    "tr-projects-rest",
+    "tr-projects-app",
+    "mirror-media-nuxt"
+];
+
+module.exports = function (robot) {
     robot.respond(/assemble/i, (msg) => {
         msg.send('I am Tom');
     });
 
-    robot.respond(/version\s+mm\s+(plate-vue-mobile|plate-vue|tr-projects-rest|tr-projects-app)/i, async (msg) => {
+    robot.respond(/version\s+mm\s+([^\s]+)/i, async (msg) => {
         const deployName = msg.match[1];
+        const matches = allowedServices.filter(s => s === deployName.toLowerCase());
+        if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
 
         try {
-            const version = await getDeployVersion('default', deployName);
-            msg.send(`${deployName} is using ${version}`);
+            const tagOnK8sDeployment = await getDeployVersion('default', deployName);
+            getGCRTags(deployName, tagOnK8sDeployment, (err, gitOpsVersion) => {
+                if (err) throw err;
+                msg.send(`${deployName} is using ${gitOpsVersion}`);
+            });
         } catch (err) {
             msg.send(err);
         }
     });
 
-    robot.respond(/deploy\s+mm\s+(tr-projects-rest|plate-vue|tr-projects-app)\s+(.+)/i, async (msg) => {
-        msg.send('launching deploy sequences');
+    robot.respond(/deploy\s+mm\s+([^\s]+)\s+(.+)/i, async (msg) => {
+        msg.send('Launching deploy sequences');
         const deployName = msg.match[1];
         const versionTag = msg.match[2];
         const isBackend = deployName.startsWith('tr-projects');
@@ -25,37 +39,54 @@ module.exports = function(robot) {
         const fullImage = `gcr.io/mirrormedia-1470651750304/${repoName}:${msg.match[2]}`;
         const deploymentList = [];
 
-        if (!isBackend) {
-            deploymentList.push(deployName);
-            // Check if frontend image tag starts with "master"
-            if ( !versionTag.startsWith('master') ) {
-                return msg.send(`invalid version. ${deployName} version should start with master`);
-            }
-        } else {
-            deploymentList.push('tr-projects-rest', 'tr-projects-app');
-        }
+        const matches = allowedServices.filter(s => s === deployName.toLowerCase());
+        if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
 
-        console.log(`updating deployment list ${deploymentList} with ${fullImage}`);
-        try {
-            for (let i = 0; i < deploymentList.length; i++) {
-                await patchDeployment('default', deploymentList[i], {
-                    body: {
-                        spec: {
-                            template: {
-                                spec: {
-                                    containers: [{
-                                        name: deploymentList[i],
-                                        image: fullImage,
-                                    }],
+        if (deployName !== "mirror-media-nuxt") {
+            if (!isBackend) {
+                deploymentList.push(deployName);
+                // Check if frontend image tag starts with "master"
+                if (!versionTag.startsWith('master')) {
+                    return msg.send(`Invalid version. ${deployName} version should start with master`);
+                }
+            } else {
+                deploymentList.push('tr-projects-rest', 'tr-projects-app');
+            }
+
+            console.log(`updating deployment list ${deploymentList} with ${fullImage}`);
+            try {
+                for (let i = 0; i < deploymentList.length; i++) {
+                    await patchDeployment('default', deploymentList[i], {
+                        body: {
+                            spec: {
+                                template: {
+                                    spec: {
+                                        containers: [{
+                                            name: deploymentList[i],
+                                            image: fullImage,
+                                        }],
+                                    },
                                 },
                             },
                         },
-                    },
-                });
-                msg.send(`deployment ${deployName} updated`);
+                    });
+                    msg.send(`deployment ${deployName} updated`);
+                }
+            } catch (err) {
+                msg.send(`Update deployment ${deployName} error: `, err);
             }
-        } catch (err) {
-            msg.send(`Update deployment ${deployName} error: `, err);
+        } else {
+            const devTag = versionTag.split(" ")[0];
+            const prodTag = versionTag.split(" ")[1];
+
+            addImageTag(deployName, devTag, prodTag, (err, fullDevTag) => {
+                if (err) {
+                    console.log(err);
+                    return msg.send(`Updating deployment ${deployName} error: ${err}`);
+                } else {
+                    msg.send(`The new tag ${prodTag} has been set to image ${fullDevTag}, ${deployName} will update in a few minutes`);
+                }
+            });
         }
     });
 
