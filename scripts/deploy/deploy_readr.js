@@ -1,13 +1,23 @@
 const { getDeployVersion, uploadDist, patchDeployment } = require('./k8s.js');
 const { addImageTag } = require('./gcr.js');
 
+const allowedServices = [
+    "readr-site-mobile",
+    "readr-site",
+    "news-projects",
+    "news-projects-canary",
+    "readr-restful",
+];
+
 module.exports = function (robot) {
     robot.respond(/assemble/i, (msg) => {
         msg.send('I am Tor');
     });
 
-    robot.respond(/version\s+rr\s+(readr-site-mobile|readr-site|news-projects|readr-restful)/i, async (msg) => {
+    robot.respond(/version\s+rr\s+([^\s]+)/i, async (msg) => {
         const deployName = msg.match[1];
+        const matches = allowedServices.filter(s => s === deployName.toLowerCase());
+        if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
 
         try {
             const version = await getDeployVersion('default', deployName);
@@ -17,22 +27,25 @@ module.exports = function (robot) {
         }
     });
 
-    robot.respond(/deploy\s+rr\s+(readr-site-mobile|readr-site|news-projects-canary|news-projects|readr-restful)\s+(.+)/i, async (msg) => {
-        msg.send('launching deploy sequences');
+    robot.respond(/deploy\s+rr\s+([^\s]+)\s+(.+)/i, async (msg) => {
+        msg.send('Launching deploy sequences');
         const deployName = msg.match[1];
         const versionTag = msg.match[2];
         const isFrontend = deployName !== 'readr-restful';
 
+        const matches = allowedServices.filter(s => s === deployName.toLowerCase());
+        if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
+
         const fullImage = 'gcr.io/mirrormedia-1470651750304/' + deployName + ':' + versionTag;
 
-        // check if version in the pattern master*
+        // Check if version in the pattern master*
         if (isFrontend) {
             if (!versionTag.startsWith('master')) {
                 return msg.send('invalid version. news-projects version should start with master');
             }
         } else {
             if (versionTag.split(" ").length != 2) {
-                return msg.send('invalid deploy command. Should specify the deploy version tag. \n "deploy rr readr-restful dev_Falsechord_711 1.1.0"')
+                return msg.send('Invalid deploy command. Should specify the deploy version tag. \n "e.g. deploy rr readr-restful dev_Falsechord_711 1.1.0"')
             }
         }
 
@@ -60,7 +73,7 @@ module.exports = function (robot) {
             const devTag = versionTag.split(" ")[0];
             const prodTag = versionTag.split(" ")[1];
 
-            addImageTag(devTag, prodTag, (err, fullDevTag) => {
+            addImageTag(deployName, devTag, prodTag, (err, fullDevTag) => {
                 if (err) {
                     console.log(err);
                     return msg.send(`Update deployment ${deployName} error: ${err}`);

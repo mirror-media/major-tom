@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const GCS_FILE_BUCKET = process.env.GCS_FILE_BUCKET;
 const GCS_BUCKET_PATH = process.env.GCS_BUCKET_PATH;
-const {initBucket, uploadFileToBucket, readdirAsync, makeFilePublic} = require('./gcs.js');
+const { initBucket, uploadFileToBucket, readdirAsync, makeFilePublic } = require('./gcs.js');
 
 const kubernetesClient = require('kubernetes-client');
 
@@ -30,22 +30,33 @@ const getDeployVersion = async (ns, deployName) => {
         const deploy = await client.apis.apps.v1.namespaces(ns).deployments(deployName).get();
         console.log(`Get image version success. Status: ${deploy.statusCode}`);
         switch (deploy.statusCode) {
-        case 200:
-            const containers = deploy.body.spec.template.spec.containers;
-            for (let i=0; i < containers.length; i++) {
-                if (containers[i].name === deployName) {
-                    version = containers[i].image.slice(containers[i].image.indexOf(':')+1);
-                    break;
+            case 200:
+                const containers = deploy.body.spec.template.spec.containers;
+                for (let i = 0; i < containers.length; i++) {
+                    if (containers[i].name === deployName) {
+                        version = containers[i].image.slice(containers[i].image.indexOf(':') + 1);
+                        exec(`gcloud container images list-tags --filter="tags=${version}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`, (err, stdout, stderr) => {
+                            if (err) return callback(err);
+
+                            // Get GitOps Prod Tag
+                            const rets = stdout.split("\n")[1];
+                            if (rets.length > 1) {
+                                const tags = rets.split(",");
+                                const gitOpsProdTag = tags.filter(s => s.match(/^[\.?\d]+$/)).sort().reverse()[0];
+                                version = `${version}:${gitOpsProdTag}`;
+                            }
+                        });
+                        break;
+                    }
                 }
-            }
-            break;
-        default:
-            throw 'not found';
+                break;
+            default:
+                throw 'not found';
         }
         return version;
     } catch (err) {
         console.error(`get deploy version failed.`, err);
-        throw `error status: ${err.statusCode}`;
+        throw `error: ${err.statusCode}`;
     }
 };
 
@@ -66,7 +77,7 @@ const createCanary = async (namespace, deployment, version) => {
         deployManifest = JSON.parse(replaceAll(template, 'canaryName', deployment));
         deployManifest.spec.template.spec.containers[0].image = version;
 
-        const create = await client.apis.apps.v1.namespaces(namespace).deployments.post({body: deployManifest});
+        const create = await client.apis.apps.v1.namespaces(namespace).deployments.post({ body: deployManifest });
         console.log(`createCanary success. statusCode: ${create.statusCode}`);
     } catch (error) {
         console.error(`createCanary failed`, error);
@@ -85,7 +96,7 @@ const getReadyPod = async (namespace, deployment) => {
         await sleep(RETRY_TIMEOUT);
         // Get pod's name
         try {
-            const pods = await client.api.v1.namespaces(namespace).pods.get({qs: {labelSelector: `app=${deployment}`}});
+            const pods = await client.api.v1.namespaces(namespace).pods.get({ qs: { labelSelector: `app=${deployment}` } });
             for (pod_index in pods.body.items) {
                 const continers = pods.body.items[pod_index].status.containerStatuses;
                 for (container_index in continers) {
@@ -115,28 +126,28 @@ const uploadDist = async (namespace, deployment, version, distribution) => {
         const deploy = await client.apis.apps.v1.namespaces(namespace).deployments(deployment).get();
         console.log(`deploy status: ${deploy.statusCode}`);
         switch (deploy.statusCode) {
-        case 200:
-            // Scale canary to 1
-            await patchDeployment(namespace, deployment, {
-                body: {
-                    spec: {
-                        replicas: 1,
-                        template: {
-                            spec: {
-                                containers: [{
-                                    name: deployment,
-                                    image: version,
-                                }],
+            case 200:
+                // Scale canary to 1
+                await patchDeployment(namespace, deployment, {
+                    body: {
+                        spec: {
+                            replicas: 1,
+                            template: {
+                                spec: {
+                                    containers: [{
+                                        name: deployment,
+                                        image: version,
+                                    }],
+                                },
                             },
                         },
                     },
-                },
-            });
-            console.log(`scale ${deployment} to 1`);
-            break;
+                });
+                console.log(`scale ${deployment} to 1`);
+                break;
 
-        default:
-            throw new Error('error finding or creating canary');
+            default:
+                throw new Error('error finding or creating canary');
         }
     } catch (err) {
         console.error(`finding ${deployment} error.`, err);
@@ -153,7 +164,7 @@ const uploadDist = async (namespace, deployment, version, distribution) => {
     // Copy dist file out
     const distFolder = `./dist/${canaryPod}`;
     try {
-        const {stdout, stderr} = await sh(`kubectl -n dist cp ${canaryPod}:/usr/src/${distribution} ${distFolder}`);
+        const { stdout, stderr } = await sh(`kubectl -n dist cp ${canaryPod}:/usr/src/${distribution} ${distFolder}`);
         console.log(`kubectl cp stdout:`, stdout);
         console.log(`kubectl cp stderr:`, stderr);
     } catch (err) {
@@ -242,7 +253,7 @@ function sh(cmd) {
     retry_count = 1;
 
     return new Promise((resolve, reject) => {
-        exec(cmd, {timeout: TIMEOUT}, (err, stdout, stderr) => {
+        exec(cmd, { timeout: TIMEOUT }, (err, stdout, stderr) => {
             if (err) {
                 if (retry_count < MAXIMUM_RETRY) {
                     retry_count += 1;
@@ -251,7 +262,7 @@ function sh(cmd) {
                     reject(err);
                 }
             } else {
-                resolve({stdout, stderr});
+                resolve({ stdout, stderr });
             }
         });
     });
