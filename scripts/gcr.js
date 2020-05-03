@@ -39,7 +39,10 @@ const getGitOpsProdTag = async (deployName, devTag, callback) => {
         const rets = stdout.split("\n");
         if (rets.length > 1) {
             const tags = rets[1].split(",");
+            console.log(tags);
             const gitOpsProdTag = tags.filter(s => s.match(/^[\.?\d]+$/)).sort().reverse()[0];
+            console.log(tags.filter(s => s.match(/^[\.?\d]+$/)).sort().reverse());
+            console.log(gitOpsProdTag);
             return callback(null, `${devTag}:${gitOpsProdTag}`);
         }
 
