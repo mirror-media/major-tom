@@ -1,10 +1,12 @@
 const { getDeployVersion, uploadDist, patchDeployment } = require('./k8s.js');
+const { addImageTag, attachGitOpsProdTag } = require('./gcr.js');
 
 const allowedServices = [
     "plate-vue-mobile",
     "plate-vue",
     "tr-projects-rest",
-    "tr-projects-app"
+    "tr-projects-app",
+    "mirror-media-nuxt"
 ];
 
 module.exports = function (robot) {
@@ -19,7 +21,7 @@ module.exports = function (robot) {
 
         try {
             const version = await getDeployVersion('default', deployName);
-            getGitOpsProdTag(deployName, version, (err, gitOpsVersion) => {
+            attachGitOpsProdTag(deployName, version, (err, gitOpsVersion) => {
                 if (err) throw err;
                 version = gitOpsVersion;
                 msg.send(`${deployName} is using ${version}`);
@@ -41,37 +43,51 @@ module.exports = function (robot) {
         const matches = allowedServices.filter(s => s === deployName.toLowerCase());
         if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
 
-        if (!isBackend) {
-            deploymentList.push(deployName);
-            // Check if frontend image tag starts with "master"
-            if (!versionTag.startsWith('master')) {
-                return msg.send(`invalid version. ${deployName} version should start with master`);
+        if (deployName !== "mirror-media-nuxt") {
+            if (!isBackend) {
+                deploymentList.push(deployName);
+                // Check if frontend image tag starts with "master"
+                if (!versionTag.startsWith('master')) {
+                    return msg.send(`invalid version. ${deployName} version should start with master`);
+                }
+            } else {
+                deploymentList.push('tr-projects-rest', 'tr-projects-app');
             }
-        } else {
-            deploymentList.push('tr-projects-rest', 'tr-projects-app');
-        }
 
-        console.log(`updating deployment list ${deploymentList} with ${fullImage}`);
-        try {
-            for (let i = 0; i < deploymentList.length; i++) {
-                await patchDeployment('default', deploymentList[i], {
-                    body: {
-                        spec: {
-                            template: {
-                                spec: {
-                                    containers: [{
-                                        name: deploymentList[i],
-                                        image: fullImage,
-                                    }],
+            console.log(`updating deployment list ${deploymentList} with ${fullImage}`);
+            try {
+                for (let i = 0; i < deploymentList.length; i++) {
+                    await patchDeployment('default', deploymentList[i], {
+                        body: {
+                            spec: {
+                                template: {
+                                    spec: {
+                                        containers: [{
+                                            name: deploymentList[i],
+                                            image: fullImage,
+                                        }],
+                                    },
                                 },
                             },
                         },
-                    },
-                });
-                msg.send(`deployment ${deployName} updated`);
+                    });
+                    msg.send(`deployment ${deployName} updated`);
+                }
+            } catch (err) {
+                msg.send(`Update deployment ${deployName} error: `, err);
             }
-        } catch (err) {
-            msg.send(`Update deployment ${deployName} error: `, err);
+        } else {
+            const devTag = versionTag.split(" ")[0];
+            const prodTag = versionTag.split(" ")[1];
+
+            addImageTag(deployName, devTag, prodTag, (err, fullDevTag) => {
+                if (err) {
+                    console.log(err);
+                    return msg.send(`Updating deployment ${deployName} error: ${err}`);
+                } else {
+                    msg.send(`The new tag ${prodTag} has been set to image ${fullDevTag}, ${deployName} will update in a few minutes`);
+                }
+            });
         }
     });
 

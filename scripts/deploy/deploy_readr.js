@@ -1,5 +1,5 @@
 const { getDeployVersion, uploadDist, patchDeployment } = require('./k8s.js');
-const { addImageTag, getGitOpsProdTag } = require('./gcr.js');
+const { addImageTag, attachGitOpsProdTag } = require('./gcr.js');
 
 const allowedServices = [
     "readr-site-mobile",
@@ -21,7 +21,7 @@ module.exports = function (robot) {
 
         try {
             let version = await getDeployVersion('default', deployName);
-            getGitOpsProdTag(deployName, version, (err, gitOpsVersion) => {
+            attachGitOpsProdTag(deployName, version, (err, gitOpsVersion) => {
                 if (err) throw err;
                 version = gitOpsVersion;
                 msg.send(`${deployName} is using ${version}`);

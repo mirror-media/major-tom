@@ -31,7 +31,7 @@ const addImageTag = async (deployName, partialDevTag, prodTag, callback) => {
     });
 }
 
-const getGitOpsProdTag = async (deployName, devTag, callback) => {
+const attachGitOpsProdTag = async (deployName, devTag, callback) => {
     console.log("exec", `gcloud container images list-tags --filter="tags=${devTag}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`);
     exec(`gcloud container images list-tags --filter="tags=${devTag}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`, (err, stdout, stderr) => {
         if (err) return callback(err);
@@ -52,5 +52,5 @@ const getGitOpsProdTag = async (deployName, devTag, callback) => {
 
 module.exports = {
     addImageTag,
-    getGitOpsProdTag
+    attachGitOpsProdTag
 };
