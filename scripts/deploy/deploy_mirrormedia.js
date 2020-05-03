@@ -20,7 +20,7 @@ module.exports = function (robot) {
         if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
 
         try {
-            const version = await getDeployVersion('default', deployName);
+            let version = await getDeployVersion('default', deployName);
             attachGitOpsProdTag(deployName, version, (err, gitOpsVersion) => {
                 if (err) throw err;
                 version = gitOpsVersion;
@@ -32,7 +32,7 @@ module.exports = function (robot) {
     });
 
     robot.respond(/deploy\s+mm\s+([^\s]+)\s+(.+)/i, async (msg) => {
-        msg.send('launching deploy sequences');
+        msg.send('Launching deploy sequences');
         const deployName = msg.match[1];
         const versionTag = msg.match[2];
         const isBackend = deployName.startsWith('tr-projects');
@@ -48,7 +48,7 @@ module.exports = function (robot) {
                 deploymentList.push(deployName);
                 // Check if frontend image tag starts with "master"
                 if (!versionTag.startsWith('master')) {
-                    return msg.send(`invalid version. ${deployName} version should start with master`);
+                    return msg.send(`Invalid version. ${deployName} version should start with master`);
                 }
             } else {
                 deploymentList.push('tr-projects-rest', 'tr-projects-app');
