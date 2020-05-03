@@ -1,22 +1,35 @@
-const {getDeployVersion, uploadDist, patchDeployment} = require('./k8s.js');
+const { getDeployVersion, uploadDist, patchDeployment } = require('./k8s.js');
 
-module.exports = function(robot) {
+const allowedServices = [
+    "plate-vue-mobile",
+    "plate-vue",
+    "tr-projects-rest",
+    "tr-projects-app"
+];
+
+module.exports = function (robot) {
     robot.respond(/assemble/i, (msg) => {
         msg.send('I am Tom');
     });
 
-    robot.respond(/version\s+mm\s+(plate-vue-mobile|plate-vue|tr-projects-rest|tr-projects-app)/i, async (msg) => {
+    robot.respond(/version\s+mm\s+([^\s]+)/i, async (msg) => {
         const deployName = msg.match[1];
+        const matches = allowedServices.filter(s => s === deployName.toLowerCase());
+        if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
 
         try {
             const version = await getDeployVersion('default', deployName);
-            msg.send(`${deployName} is using ${version}`);
+            getGitOpsProdTag(deployName, version, (err, gitOpsVersion) => {
+                if (err) throw err;
+                version = gitOpsVersion;
+                msg.send(`${deployName} is using ${version}`);
+            });
         } catch (err) {
             msg.send(err);
         }
     });
 
-    robot.respond(/deploy\s+mm\s+(tr-projects-rest|plate-vue|tr-projects-app)\s+(.+)/i, async (msg) => {
+    robot.respond(/deploy\s+mm\s+([^\s]+)\s+(.+)/i, async (msg) => {
         msg.send('launching deploy sequences');
         const deployName = msg.match[1];
         const versionTag = msg.match[2];
@@ -25,10 +38,13 @@ module.exports = function(robot) {
         const fullImage = `gcr.io/mirrormedia-1470651750304/${repoName}:${msg.match[2]}`;
         const deploymentList = [];
 
+        const matches = allowedServices.filter(s => s === deployName.toLowerCase());
+        if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
+
         if (!isBackend) {
             deploymentList.push(deployName);
             // Check if frontend image tag starts with "master"
-            if ( !versionTag.startsWith('master') ) {
+            if (!versionTag.startsWith('master')) {
                 return msg.send(`invalid version. ${deployName} version should start with master`);
             }
         } else {

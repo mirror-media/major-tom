@@ -6,7 +6,7 @@ const allowedServices = [
     "readr-site",
     "news-projects",
     "news-projects-canary",
-    "readr-restful",
+    "readr-restful"
 ];
 
 module.exports = function (robot) {
