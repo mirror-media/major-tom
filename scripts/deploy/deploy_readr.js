@@ -24,8 +24,8 @@ module.exports = function (robot) {
             getGitOpsProdTag(deployName, version, (err, gitOpsVersion) => {
                 if (err) throw err;
                 version = gitOpsVersion;
+                msg.send(`${deployName} is using ${version}`);
             });
-            msg.send(`${deployName} is using ${version}`);
         } catch (err) {
             msg.send(err);
         }
