@@ -12,26 +12,27 @@ const addImageTag = async (deployName, partialDevTag, prodTag, callback) => {
     exec(`gcloud container images list-tags --filter="tags~^\d.*$ AND NOT tags<${prodTag}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`, (err, stdout, stderr) => {
         if (err) return callback(err);
         if (stdout.split("\n").length > 1) return callback("Version can only be increased");
-    });
 
-    console.log("exec", `gcloud container images list-tags --filter="tags:*${partialDevTag}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`);
-    exec(`gcloud container images list-tags --filter="tags:*${partialDevTag}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`, (err, stdout, stderr) => {
-        if (err) return callback(err);
-        if (stdout.split("\n").length < 2) return callback("No such image");
-
-        // Get devTag from buffered `stdout`
-        devTag = stdout.split("\n")[1];
-
-        console.log(`gcloud container images add-tag gcr.io/mirrormedia-1470651750304/${deployName}:${devTag} gcr.io/mirrormedia-1470651750304/${deployName}:${prodTag}`)
-        exec(`gcloud -q container images add-tag gcr.io/mirrormedia-1470651750304/${deployName}:${devTag} gcr.io/mirrormedia-1470651750304/${deployName}:${prodTag}`, (err, stdout, stderr) => {
+        console.log("exec", `gcloud container images list-tags --filter="tags:*${partialDevTag}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`);
+        exec(`gcloud container images list-tags --filter="tags:*${partialDevTag}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`, (err, stdout, stderr) => {
             if (err) return callback(err);
+            if (stdout.split("\n").length < 2) return callback("No such image");
 
-            return callback(null, devTag);
+            // Get devTag from buffered `stdout`
+            devTag = stdout.split("\n")[1];
+
+            console.log(`gcloud container images add-tag gcr.io/mirrormedia-1470651750304/${deployName}:${devTag} gcr.io/mirrormedia-1470651750304/${deployName}:${prodTag}`)
+            exec(`gcloud -q container images add-tag gcr.io/mirrormedia-1470651750304/${deployName}:${devTag} gcr.io/mirrormedia-1470651750304/${deployName}:${prodTag}`, (err, stdout, stderr) => {
+                if (err) return callback(err);
+
+                return callback(null, devTag);
+            });
         });
     });
 }
 
 const getGitOpsProdTag = async (deployName, devTag, callback) => {
+    console.log("exec", `gcloud container images list-tags --filter="tags=${devTag}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`);
     exec(`gcloud container images list-tags --filter="tags=${devTag}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`, (err, stdout, stderr) => {
         if (err) return callback(err);
 
