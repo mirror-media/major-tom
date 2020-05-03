@@ -23,7 +23,7 @@ const addImageTag = async (deployName, partialDevTag, prodTag, callback) => {
 
             console.log(`gcloud container images add-tag gcr.io/mirrormedia-1470651750304/${deployName}:${devTag} gcr.io/mirrormedia-1470651750304/${deployName}:${prodTag}`)
             exec(`gcloud -q container images add-tag gcr.io/mirrormedia-1470651750304/${deployName}:${devTag} gcr.io/mirrormedia-1470651750304/${deployName}:${prodTag}`, (err, stdout, stderr) => {
-                if (err) return callback(err);
+                if (err) return callback("A image can only have one prod tag. Please use `rollback` command to fallback");
 
                 return callback(null, devTag);
             });
