@@ -35,17 +35,6 @@ const getDeployVersion = async (ns, deployName) => {
                 for (let i = 0; i < containers.length; i++) {
                     if (containers[i].name === deployName) {
                         version = containers[i].image.slice(containers[i].image.indexOf(':') + 1);
-                        exec(`gcloud container images list-tags --filter="tags=${version}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`, (err, stdout, stderr) => {
-                            if (err) return callback(err);
-
-                            // Get GitOps Prod Tag
-                            const rets = stdout.split("\n")[1];
-                            if (rets.length > 1) {
-                                const tags = rets.split(",");
-                                const gitOpsProdTag = tags.filter(s => s.match(/^[\.?\d]+$/)).sort().reverse()[0];
-                                version = `${version}:${gitOpsProdTag}`;
-                            }
-                        });
                         break;
                     }
                 }

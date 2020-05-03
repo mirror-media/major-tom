@@ -1,5 +1,5 @@
 const { getDeployVersion, uploadDist, patchDeployment } = require('./k8s.js');
-const { addImageTag } = require('./gcr.js');
+const { addImageTag, getGitOpsProdTag } = require('./gcr.js');
 
 const allowedServices = [
     "readr-site-mobile",
@@ -20,7 +20,11 @@ module.exports = function (robot) {
         if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
 
         try {
-            const version = await getDeployVersion('default', deployName);
+            let version = await getDeployVersion('default', deployName);
+            getGitOpsProdTag(deployName, version, (err, gitOpsVersion) => {
+                if (err) throw err;
+                version = gitOpsVersion;
+            });
             msg.send(`${deployName} is using ${version}`);
         } catch (err) {
             msg.send(err);
@@ -41,11 +45,11 @@ module.exports = function (robot) {
         // Check if version in the pattern master*
         if (isFrontend) {
             if (!versionTag.startsWith('master')) {
-                return msg.send('invalid version. news-projects version should start with master');
+                return msg.send('Invalid version. news-projects version should start with master');
             }
         } else {
             if (versionTag.split(" ").length != 2) {
-                return msg.send('Invalid deploy command. Should specify the deploy version tag. \n "e.g. deploy rr readr-restful dev_Falsechord_711 1.1.0"')
+                return msg.send('Invalid deploy command. Should specify the deploy version tag. \n e.g. deploy rr readr-restful dev_Falsechord_711 1.1.0')
             }
         }
 
@@ -76,9 +80,10 @@ module.exports = function (robot) {
             addImageTag(deployName, devTag, prodTag, (err, fullDevTag) => {
                 if (err) {
                     console.log(err);
-                    return msg.send(`Update deployment ${deployName} error: ${err}`);
+                    return msg.send(`Updating deployment ${deployName} error: ${err}`);
+                } else {
+                    msg.send(`The new tag ${prodTag} has been set to image ${fullDevTag}, ${deployName} will update in a few minutes`);
                 }
-                msg.send(`The new tag ${prodTag} has been set to image ${fullDevTag}, ${deployName} will update in a few minutes`);
             });
         }
     });
