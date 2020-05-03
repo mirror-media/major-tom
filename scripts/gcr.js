@@ -7,7 +7,7 @@ const { exec } = require('child_process');
 
 const addImageTag = async (deployName, partialDevTag, prodTag, callback) => {
     /* The new prodTag should be greater than any existing prodTag in desc lexicographic order.
-    Moreover, one image can only have one prodTag, or the filter won't work properly due to its limited functionality. */
+    Besides, one image can only have one prodTag, or the filter won't work properly due to its limited functionality. */
     console.log("exec", `gcloud container images list-tags --filter="tags~^\d.*$ AND NOT tags<${prodTag}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`)
     exec(`gcloud container images list-tags --filter="tags~^\d.*$ AND NOT tags<${prodTag}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`, (err, stdout, stderr) => {
         if (err) return callback(err);
