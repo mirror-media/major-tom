@@ -36,12 +36,18 @@ const getGitOpsProdTag = async (deployName, devTag, callback) => {
     exec(`gcloud container images list-tags --filter="tags=${devTag}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`, (err, stdout, stderr) => {
         if (err) return callback(err);
 
+        let version = devTag;
+
         const rets = stdout.split("\n");
-        if (rets.length > 1) {
-            const tags = rets[1].split(",");
+        if (rets.length > 0) {
+            const tags = rets[1].replace('"', '').split(',');
             const gitOpsProdTag = tags.filter(s => s.match(/^[\.?\d]+$/)).sort().reverse()[0];
-            return callback(null, `${devTag}:${gitOpsProdTag}`);
+
+            if (gitOpsProdTag)
+                version = `${devTag}:${gitOpsProdTag}`
         }
+
+        return callback(null, `${version}`);
     });
 }
 
