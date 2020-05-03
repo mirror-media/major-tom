@@ -42,7 +42,7 @@ const attachGitOpsProdTag = async (deployName, devTag, callback) => {
             const tags = rets[1].replace('"', '').split(',');
             const gitOpsProdTag = tags.filter(s => s.match(/^[\.?\d]+$/)).sort().reverse()[0];
 
-            if (gitOpsProdTag)
+            if (gitOpsProdTag && gitOpsProdTag !== devTag)
                 version = `${devTag}:${gitOpsProdTag}`
         }
 
