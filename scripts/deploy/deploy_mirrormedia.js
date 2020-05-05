@@ -147,7 +147,7 @@ module.exports = function (robot) {
         }
     });
 
-    robot.respond(/replicas\s+mm\s+([^\s]+)\s+(\d+)\s+(\d+)/i, async (msg) => {
+    robot.respond(/scale\s+mm\s+([^\s]+)\s+(\d+)\s+(\d+)/i, async (msg) => {
         const deployName = msg.match[1];
         const currentReplicas = msg.match[2];
         const assignedReplicas = msg.match[3];
