@@ -261,6 +261,18 @@ const getRevisions = async (namespace, deployname) => {
     }
 };
 
+const rollbackDeployment = async (namespace, deployname, revision) => {
+    try {
+        const { stdout, stderr } = await sh(`kubectl rollout undo deployment ${deployname} --to-revision=${revision} -n ${namespace}`);
+
+        if (stderr) return stderr;
+        return `*${deployname}* rolled back to revision \`${revision}\`.`;
+    } catch (err) {
+        console.log(err);
+        throw `err: ${err}`;
+    }
+};
+
 // shell command
 
 function sh(cmd) {
