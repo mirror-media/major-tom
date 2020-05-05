@@ -110,7 +110,7 @@ module.exports = function (robot) {
         if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
 
         try {
-            revisions = getRevisions('default', deployName);
+            revisions = await getRevisions('default', deployName);
             msg.send(`Revisions:\\n${revisions.join('\n')}`);
         } catch (error) {
             msg.send(error);
