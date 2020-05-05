@@ -234,6 +234,25 @@ const patchDeployment = async (namespace, name, patchData) => {
     }, checkInterval);
 };
 
+const getRevisions = async (namespace, deployname) => {
+    const { hist, histerr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace}`);
+    revisions = hist.split('\n').slice(2).reverse().flatMap(rev => {
+        rev = rev.split(' ')[0];
+
+        const { det, deterr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace} --revision=${rev}`);
+        const re = RegExp(`${deployname}:\\s+Image:\\s+.*`, 'm');
+        image = det.match(re)[0];
+        if (image) {
+            tag = image.slice(image.lastIndexOf(':') + 1);
+            return `${rev}\\t${tag}`;
+        }
+
+        return `${rev}\\t`;
+    });
+
+    return revisions;
+};
+
 // shell command
 
 function sh(cmd) {
@@ -262,4 +281,5 @@ module.exports = {
     getDeployVersion,
     uploadDist,
     patchDeployment,
+    getRevisions
 };

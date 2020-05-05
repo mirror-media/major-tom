@@ -1,4 +1,4 @@
-const { getDeployVersion, uploadDist, patchDeployment } = require('./k8s.js');
+const { getDeployVersion, uploadDist, patchDeployment, getRevisions } = require('./k8s.js');
 const { addImageTag, getGCRVersion } = require('./gcr.js');
 
 const allowedServices = [
@@ -101,6 +101,19 @@ module.exports = function (robot) {
             msg.send('dist uploaded.');
         } catch (err) {
             msg.send(err);
+        }
+    });
+
+    robot.respond(/revisions\s+mm\s+([^\s]+)\s+/i, async (msg) => {
+        const deployName = msg.match[1];
+        const matches = allowedServices.filter(s => s === deployName.toLowerCase());
+        if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
+
+        try {
+            revisions = getRevisions('default', deployName);
+            msg.send(`Revisions:\\n${revisions.join('\n')}`);
+        } catch (error) {
+            msg.send(error);
         }
     });
 };
