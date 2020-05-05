@@ -254,7 +254,6 @@ const getRevisions = async (namespace, deployname) => {
             }
         }));
 
-        console.log(revisions);
         return revisions.sort().reverse();
     } catch (err) {
         console.log(err);
