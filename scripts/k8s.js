@@ -257,11 +257,11 @@ const getRevisions = async (namespace, deployname) => {
 
             return `${rev}\\t`;
         });
+
+        return revisions;
     } catch (err) {
         throw err;
     }
-
-    return revisions;
 };
 
 // shell command
