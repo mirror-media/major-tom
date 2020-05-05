@@ -283,7 +283,7 @@ const getReplicas = async (namespace, deployName) => {
 const setReplicas = async (namespace, deployName, currentReplicas, assignedReplicas) => {
     try {
         const { stdout, stderr } = await sh(`kubectl scale deployment ${deployName} --current-replicas=${currentReplicas} --replicas=${assignedReplicas} -n ${namespace}`);
-        const successMessage = stdout.includes('scaled') ? `*from* \`${currentReplicas}\` *to* \`${assignedReplicas}\` @Tin ` : ``;
+        const successMessage = stdout.includes('scaled') ? `*from* \`${currentReplicas}\` *to* \`${assignedReplicas}\` @Tin Chen` : ``;
         return `*${stdout.replace('\n', '')}* ${successMessage} \n *This command is no use to *GitOps* deployments managed by Helm Operator.`;
     } catch (err) {
         throw err;
