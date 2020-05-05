@@ -234,16 +234,16 @@ const patchDeployment = async (namespace, name, patchData) => {
     }, checkInterval);
 };
 
-const getRevisions = async (namespace, deployname) => {
+const getRevisions = async (namespace, deployName) => {
     try {
         const revisions = [];
-        const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace}`);
+        const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployName} -n ${namespace}`);
 
         await Promise.all(stdout.replace(/\n\s+/m, '').split('\n').slice(2).map(async rev => {
             rev = rev.split(/ +/)[0];
 
-            const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace} --revision=${rev}`);
-            const re = RegExp(`${deployname}:\\s+Image:\\s+.*`, 'm');
+            const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployName} -n ${namespace} --revision=${rev}`);
+            const re = RegExp(`${deployName}:\\s+Image:\\s+.*`, 'm');
             const image = stdout.match(re)[0];
 
             if (image) {
@@ -261,12 +261,12 @@ const getRevisions = async (namespace, deployname) => {
     }
 };
 
-const rollbackDeployment = async (namespace, deployname, revision) => {
+const rollbackDeployment = async (namespace, deployName, revision) => {
     try {
-        const { stdout, stderr } = await sh(`kubectl rollout undo deployment ${deployname} --to-revision=${revision} -n ${namespace}`);
+        const { stdout, stderr } = await sh(`kubectl rollout undo deployment ${deployName} --to-revision=${revision} -n ${namespace}`);
 
         if (stderr) return stderr;
-        return `*${deployname}* rolled back to revision \`${revision}\`.`;
+        return `*${deployName}* rolled back to revision \`${revision}\`.`;
     } catch (err) {
         console.log(err);
         throw `err: ${err}`;

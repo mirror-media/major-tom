@@ -126,7 +126,7 @@ module.exports = function (robot) {
     });
 
     robot.respond(/rollback\s+rr\s+([^\s]+)\s+(\d+)/i, async (msg) => {
-        const deployName = msg.match[1];
+        const deployname = msg.match[1];
         const revision = msg.match[2];
 
         const matches = allowedServices.filter(s => s === deployName.toLowerCase());
