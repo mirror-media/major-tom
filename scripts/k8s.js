@@ -274,7 +274,7 @@ const getReplicas = async (namespace, deployName) => {
     try {
         const { stdout, stderr } = await sh(`kubectl get deployments ${deployName} -n ${namespace}`);
         const replicas = stdout.split('\n')[1].split(/ +/)[1];
-        return `*${deployName}* replicas (ready/total): ${replicas}`;
+        return `*${deployName}* replicas: ${replicas}`;
     } catch (err) {
         throw err;
     }
