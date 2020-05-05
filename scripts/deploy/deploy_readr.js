@@ -1,4 +1,4 @@
-const { getDeployVersion, uploadDist, patchDeployment } = require('./k8s.js');
+const { getDeployVersion, uploadDist, patchDeployment, getRevisions, rollbackDeployment, getReplicas } = require('./k8s.js');
 const { addImageTag, getGCRVersion } = require('./gcr.js');
 
 const allowedServices = [
@@ -109,6 +109,50 @@ module.exports = function (robot) {
             msg.send('dist uploaded.');
         } catch (err) {
             msg.send(err);
+        }
+    });
+
+    robot.respond(/revisions\s+rr\s+([^\s]+)/i, async (msg) => {
+        const deployName = msg.match[1];
+        const matches = allowedServices.filter(s => s === deployName.toLowerCase());
+        if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
+
+        try {
+            const revisions = await getRevisions('default', deployName);
+            msg.send(`*${deployName}* revisions:\n${revisions.join('\n')}`);
+        } catch (error) {
+            console.log(err);
+            msg.send(`error: ${err}`);
+        }
+    });
+
+    robot.respond(/rollback\s+rr\s+([^\s]+)\s+(\d+)/i, async (msg) => {
+        const deployName = msg.match[1];
+        const revision = msg.match[2];
+
+        const matches = allowedServices.filter(s => s === deployName.toLowerCase());
+        if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
+
+        try {
+            const result = await rollbackDeployment('default', deployName, revision);
+            msg.send(`${result}`);
+        } catch (err) {
+            console.log(err)
+            msg.send(`error: ${err}`);
+        }
+    });
+
+    robot.respond(/replicas\s+rr\s+([^\s]+)/i, async (msg) => {
+        const deployName = msg.match[1];
+        const matches = allowedServices.filter(s => s === deployName.toLowerCase());
+        if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
+
+        try {
+            const result = await getReplicas('default', deployName);
+            msg.send(`${result}`);
+        } catch (err) {
+            console.log(err)
+            msg.send(`error: ${err}`);
         }
     });
 };

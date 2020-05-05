@@ -234,6 +234,52 @@ const patchDeployment = async (namespace, name, patchData) => {
     }, checkInterval);
 };
 
+const getRevisions = async (namespace, deployName) => {
+    try {
+        const revisions = [];
+        const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployName} -n ${namespace}`);
+
+        await Promise.all(stdout.replace(/\n\s+/m, '').split('\n').slice(2).map(async rev => {
+            rev = rev.split(/ +/)[0];
+
+            const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployName} -n ${namespace} --revision=${rev}`);
+            const re = RegExp(`${deployName}:\\s+Image:\\s+.*`, 'm');
+            const image = stdout.match(re)[0];
+
+            if (image) {
+                tag = image.slice(image.lastIndexOf(':') + 1);
+                revisions.push(`${rev}:\t${tag}`)
+            } else {
+                revisions.push(`#${rev}:\t`)
+            }
+        }));
+
+        return revisions.sort().reverse();
+    } catch (err) {
+        throw err;
+    }
+};
+
+const rollbackDeployment = async (namespace, deployName, revision) => {
+    try {
+        const { stdout, stderr } = await sh(`kubectl rollout undo deployment ${deployName} --to-revision=${revision} -n ${namespace}`);
+        const successMessage = !stdout.includes('(') ? `*to revision* \`${revision}\`` : ``;
+        return `*${stdout.replace('\n', '')}* ${successMessage}`;
+    } catch (err) {
+        throw err;
+    }
+};
+
+const getReplicas = async (namespace, deployName) => {
+    try {
+        const { stdout, stderr } = await sh(`kubectl describe deployments ${deployName} -n ${namespace}`);
+        const replicas = stdout.split('\n')[1].split(/ +/)[1];
+        return `*${deployName}* replicas(ready/total): ${replicas}`;
+    } catch (err) {
+        throw err;
+    }
+};
+
 // shell command
 
 function sh(cmd) {
@@ -262,4 +308,7 @@ module.exports = {
     getDeployVersion,
     uploadDist,
     patchDeployment,
+    getRevisions,
+    rollbackDeployment,
+    getReplicas
 };
