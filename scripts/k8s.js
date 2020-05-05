@@ -235,25 +235,31 @@ const patchDeployment = async (namespace, name, patchData) => {
 };
 
 const getRevisions = async (namespace, deployname) => {
-    const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace}`);
+    let revisions;
 
-    revisions = stdout.replace(/\n\s+/m, '').split('\n').slice(2).reverse().flatMap(rev => {
-        rev = rev.split(/ +/)[0];
-        console.log(rev);
-        console.log('exec', `kubectl rollout history deployment ${deployname} -n ${namespace} --revision=${rev}`);
-        /* const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace} --revision=${rev}`);
-        console.log(stdout);
-        const re = RegExp(`${deployname}:\\s+Image:\\s+.*`, 'm');
-        image = stdout.match(re)[0];
-        console.log(image);
-        if (image) {
-            tag = image.slice(image.lastIndexOf(':') + 1);
-            console.log(tag);
-            return `${rev}\\t${tag}`;
-        } */
+    try {
+        const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace}`);
 
-        return `${rev}\\t`;
-    });
+        revisions = stdout.replace(/\n\s+/m, '').split('\n').slice(2).reverse().flatMap(rev => {
+            rev = rev.split(/ +/)[0];
+            console.log(rev);
+            console.log('exec', `kubectl rollout history deployment ${deployname} -n ${namespace} --revision=${rev}`);
+            /* const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace} --revision=${rev}`);
+            console.log(stdout);
+            const re = RegExp(`${deployname}:\\s+Image:\\s+.*`, 'm');
+            image = stdout.match(re)[0];
+            console.log(image);
+            if (image) {
+                tag = image.slice(image.lastIndexOf(':') + 1);
+                console.log(tag);
+                return `${rev}\\t${tag}`;
+            } */
+
+            return `${rev}\\t`;
+        });
+    } catch (err) {
+        throw err;
+    }
 
     return revisions;
 };
