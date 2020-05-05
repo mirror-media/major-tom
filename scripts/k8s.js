@@ -248,10 +248,10 @@ const getRevisions = async (namespace, deployname) => {
 
             if (image) {
                 tag = image.slice(image.lastIndexOf(':') + 1);
-                revisions.push(`#${rev} ${tag}`)
+                revisions.push(`${rev}:\t${tag}`)
+            } else {
+                revisions.push(`#${rev}:\t`)
             }
-
-            revisions.push(`#${rev}`)
         }));
 
         console.log(revisions);
