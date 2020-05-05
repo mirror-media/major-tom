@@ -112,7 +112,7 @@ module.exports = function (robot) {
         }
     });
 
-    robot.respond(/revisions\s+mm\s+([^\s]+)/i, async (msg) => {
+    robot.respond(/revisions\s+rr\s+([^\s]+)/i, async (msg) => {
         const deployName = msg.match[1];
         const matches = allowedServices.filter(s => s === deployName.toLowerCase());
         if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
