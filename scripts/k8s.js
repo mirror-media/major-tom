@@ -239,7 +239,7 @@ const getRevisions = async (namespace, deployname) => {
         const revisions = [];
         const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace}`);
 
-        revisions.push(stdout.replace(/\n\s+/m, '').split('\n').slice(2).reverse().foreach(async rev => {
+        revisions.push(stdout.replace(/\n\s+/m, '').split('\n').slice(2).reverse().forEach(async rev => {
             rev = rev.split(/ +/)[0];
 
             const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace} --revision=${rev}`);
