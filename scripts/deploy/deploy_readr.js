@@ -68,7 +68,7 @@ module.exports = function (robot) {
                         },
                     },
                 });
-                msg.send(`${deployName} updated`);
+                msg.send(`${deployName} updated @Tin `);
             } catch (err) {
                 msg.send(`Update deployment ${deployName} error: `, err);
             }
@@ -81,7 +81,7 @@ module.exports = function (robot) {
                     console.log(err);
                     return msg.send(`Updating deployment ${deployName} error: ${err}`);
                 } else {
-                    msg.send(`The new tag ${prodTag} has been set to image ${fullDevTag}, ${deployName} will update in a few minutes`);
+                    msg.send(`The new tag ${prodTag} has been set to image ${fullDevTag}, ${deployName} will update in a few minutes @Tin `);
                 }
             });
         }
