@@ -263,8 +263,18 @@ const getRevisions = async (namespace, deployName) => {
 const rollbackDeployment = async (namespace, deployName, revision) => {
     try {
         const { stdout, stderr } = await sh(`kubectl rollout undo deployment ${deployName} --to-revision=${revision} -n ${namespace}`);
-        const successMessage = !stdout.contains('(') ? `*to revision* \`${revision}\`` : ``;
+        const successMessage = !stdout.includes('(') ? `*to revision* \`${revision}\`` : ``;
         return `*${stdout.replace('\n', '')}* ${successMessage}`;
+    } catch (err) {
+        throw err;
+    }
+};
+
+const getReplicas = async (namespace, deployName) => {
+    try {
+        const { stdout, stderr } = await sh(`kubectl describe deployments ${deployName} -n ${namespace}`);
+        const replicas = stdout.split('\n')[1].split(/ +/)[1];
+        return `*${deployName}* replicas (ready/total): ${replicas}`;
     } catch (err) {
         throw err;
     }
@@ -299,5 +309,6 @@ module.exports = {
     uploadDist,
     patchDeployment,
     getRevisions,
-    rollbackDeployment
+    rollbackDeployment,
+    getReplicas
 };

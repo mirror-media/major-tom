@@ -1,4 +1,4 @@
-const { getDeployVersion, uploadDist, patchDeployment, getRevisions, rollbackDeployment } = require('./k8s.js');
+const { getDeployVersion, uploadDist, patchDeployment, getRevisions, rollbackDeployment, getReplicas } = require('./k8s.js');
 const { addImageTag, getGCRVersion } = require('./gcr.js');
 
 const allowedServices = [
