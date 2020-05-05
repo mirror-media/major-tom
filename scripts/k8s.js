@@ -236,9 +236,9 @@ const patchDeployment = async (namespace, name, patchData) => {
 
 const getRevisions = async (namespace, deployname) => {
     const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace}`);
-    console.log(stdout.split('\n').replace(/\n\s+/m, ''));
-    console.log(stdout.split('\n').replace(/\n\s+/m, '').split('\n').slice(2).reverse());
-    revisions = stdout.split('\n').replace(/\n\s+/m, '').split('\n').slice(2).reverse().flatMap(async rev => {
+    console.log(stdout.replace(/\n\s+/m, '').split('\n'));
+    console.log(stdout.replace(/\n\s+/m, '').split('\n').split('\n').slice(2).reverse());
+    revisions = stdout.replace(/\n\s+/m, '').split('\n').split('\n').slice(2).reverse().flatMap(async rev => {
         rev = rev.replace(/\s+/, ' ').split(' ')[0];
         console.log(rev);
         console.log('exec', `kubectl rollout history deployment ${deployname} -n ${namespace} --revision=${rev}`);
