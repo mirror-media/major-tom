@@ -272,9 +272,9 @@ const rollbackDeployment = async (namespace, deployName, revision) => {
 
 const getReplicas = async (namespace, deployName) => {
     try {
-        const { stdout, stderr } = await sh(`kubectl describe deployments ${deployName} -n ${namespace}`);
+        const { stdout, stderr } = await sh(`kubectl get deployments ${deployName} -n ${namespace}`);
         const replicas = stdout.split('\n')[1].split(/ +/)[1];
-        return `*${deployName}* replicas(ready/total): ${replicas}`;
+        return `*${deployName}* replicas (ready/total): ${replicas}`;
     } catch (err) {
         throw err;
     }
