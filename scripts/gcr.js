@@ -37,7 +37,7 @@ const getGCRVersion = async (deployName, deployTag, callback) => {
         if (err) return callback(err);
 
         const rets = stdout.split("\n");
-        if (rets.length > 0) {
+        if (rets.length > 1) {
             const gcrTags = rets[1].replace(/"/g, '').split(',').sort().reverse();
             const version = gcrTags.join(', ');
             return callback(null, `[${version}]`);
