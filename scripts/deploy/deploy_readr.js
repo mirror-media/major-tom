@@ -121,7 +121,8 @@ module.exports = function (robot) {
             const revisions = await getRevisions('default', deployName);
             msg.send(`*${deployName}* revisions:\n${revisions.join('\n')}`);
         } catch (error) {
-            msg.send('No revisions.');
+            console.log(err);
+            msg.send(`error: ${err}`);
         }
     });
 
@@ -137,7 +138,7 @@ module.exports = function (robot) {
             msg.send(`*${result.replace('\n', '')} to revision* \`${revision}\``);
         } catch (err) {
             console.log(err)
-            msg.send(`Rollback failed due to an error: ${err}.`);
+            msg.send(`error: ${err}`);
         }
     });
 };

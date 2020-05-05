@@ -114,7 +114,7 @@ module.exports = function (robot) {
             msg.send(`*${deployName}* revisions:\n${revisions.join('\n')}`);
         } catch (err) {
             console.log(err);
-            msg.send('No revisions.');
+            msg.send(`error: ${err}`);
         }
     });
 
@@ -130,7 +130,7 @@ module.exports = function (robot) {
             msg.send(`*${result.replace('\n', '')} to revision* \`${revision}\``);
         } catch (err) {
             console.log(err)
-            msg.send(`Rollback failed due to an error: ${err}.`);
+            msg.send(`error: ${err}`);
         }
     });
 };
