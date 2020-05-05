@@ -264,7 +264,7 @@ const rollbackDeployment = async (namespace, deployName, revision) => {
     try {
         const { stdout, stderr } = await sh(`kubectl rollout undo deployment ${deployName} --to-revision=${revision} -n ${namespace}`);
         const successMessage = !stdout.contains('(') ? `*to revision* \`${revision}\`` : ``;
-        return `*${stdout}* ${successMessage}`;
+        return `*${stdout.replace('\n', '')}* ${successMessage}`;
     } catch (err) {
         throw err;
     }
