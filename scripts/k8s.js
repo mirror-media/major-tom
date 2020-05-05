@@ -280,6 +280,16 @@ const getReplicas = async (namespace, deployName) => {
     }
 };
 
+const setReplicas = async (namespace, deployName, currentReplicas, assignedReplicas) => {
+    try {
+        const { stdout, stderr } = await sh(`kubectl scale deployment ${deployName} --current-replicas=${currentReplicas} --replicas=${assignedReplicas} -n ${namespace}`);
+        const successMessage = stdout.includes('scaled') ? `*from* \`${currentReplicas}\` *to* \`${assignedReplicas}\`` : ``;
+        return `*${stdout} ${successMessage}* @Tin @hcchien \n *This command is no use to *GitOps* deployments.`;
+    } catch (err) {
+        throw err;
+    }
+};
+
 // shell command
 
 function sh(cmd) {
@@ -310,5 +320,6 @@ module.exports = {
     patchDeployment,
     getRevisions,
     rollbackDeployment,
-    getReplicas
+    getReplicas,
+    setReplicas
 };

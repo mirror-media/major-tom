@@ -1,4 +1,4 @@
-const { getDeployVersion, uploadDist, patchDeployment, getRevisions, rollbackDeployment, getReplicas } = require('./k8s.js');
+const { getDeployVersion, uploadDist, patchDeployment, getRevisions, rollbackDeployment, getReplicas, setReplicas } = require('./k8s.js');
 const { addImageTag, getGCRVersion } = require('./gcr.js');
 
 const allowedServices = [
@@ -121,7 +121,6 @@ module.exports = function (robot) {
     robot.respond(/rollback\s+mm\s+([^\s]+)\s+(\d+)/i, async (msg) => {
         const deployName = msg.match[1];
         const revision = msg.match[2];
-
         const matches = allowedServices.filter(s => s === deployName.toLowerCase());
         if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
 
@@ -141,6 +140,22 @@ module.exports = function (robot) {
 
         try {
             const result = await getReplicas('default', deployName);
+            msg.send(`${result}`);
+        } catch (err) {
+            console.log(err)
+            msg.send(`error: ${err}`);
+        }
+    });
+
+    robot.respond(/replicas\s+mm\s+([^\s]+)\s+(\d+)\s+(\d+)/i, async (msg) => {
+        const deployName = msg.match[1];
+        const currentReplicas = msg.match[2];
+        const assignedReplicas = msg.match[3];
+        const matches = allowedServices.filter(s => s === deployName.toLowerCase());
+        if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
+
+        try {
+            const result = await setReplicas('default', deployName, currentReplicas, assignedReplicas);
             msg.send(`${result}`);
         } catch (err) {
             console.log(err)
