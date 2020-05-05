@@ -1,5 +1,5 @@
 const { getDeployVersion, uploadDist, patchDeployment } = require('./k8s.js');
-const { addImageTag, getGCRTags } = require('./gcr.js');
+const { addImageTag, getGCRVersion } = require('./gcr.js');
 
 const allowedServices = [
     "readr-site-mobile",
@@ -20,10 +20,10 @@ module.exports = function (robot) {
         if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
 
         try {
-            const tagOnK8sDeployment = await getDeployVersion('default', deployName);
-            getGCRTags(deployName, tagOnK8sDeployment, (err, gitOpsVersion) => {
+            const tagOnK8s = await getDeployVersion('default', deployName);
+            getGCRVersion(deployName, tagOnK8s, (err, gcrVersion) => {
                 if (err) throw err;
-                msg.send(`${deployName} is using ${gitOpsVersion}`);
+                msg.send(`${deployName} is using ${gcrVersion}`);
             });
         } catch (err) {
             msg.send(err);

@@ -31,23 +31,23 @@ const addImageTag = async (deployName, partialDevTag, prodTag, callback) => {
     });
 }
 
-const getGCRTags = async (deployName, devTag, callback) => {
-    console.log("exec", `gcloud container images list-tags --filter="tags=${devTag}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`);
-    exec(`gcloud container images list-tags --filter="tags=${devTag}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`, (err, stdout, stderr) => {
+const getGCRVersion = async (deployName, deployTag, callback) => {
+    console.log("exec", `gcloud container images list-tags --filter="tags=${deployTag}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`);
+    exec(`gcloud container images list-tags --filter="tags=${deployTag}" --format="csv(tags)" gcr.io/mirrormedia-1470651750304/${deployName}`, (err, stdout, stderr) => {
         if (err) return callback(err);
 
         const rets = stdout.split("\n");
         if (rets.length > 0) {
-            const tags = rets[1].replace(/"/g, '').split(',');
-            const gitOpsProdTags = tags.sort().reverse().join(', ');
-            return callback(null, `[${gitOpsProdTags}]`);
+            const gcrTags = rets[1].replace(/"/g, '').split(',').sort().reverse();
+            const version = gcrTags.join(', ');
+            return callback(null, `[${version}]`);
         }
 
-        return callback(null, `[${devTag}]`);
+        return callback(null, `[${deployTag}]`);
     });
 }
 
 module.exports = {
     addImageTag,
-    getGCRTags
+    getGCRVersion
 };
