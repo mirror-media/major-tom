@@ -239,13 +239,12 @@ const getRevisions = async (namespace, deployname) => {
         const revisions = [];
         const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace}`);
 
-        stdout.replace(/\n\s+/m, '').split('\n').slice(2).reverse().forEach(async rev => {
+        await stdout.replace(/\n\s+/m, '').split('\n').slice(2).reverse().forEach(async rev => {
             rev = rev.split(/ +/)[0];
 
             const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace} --revision=${rev}`);
             const re = RegExp(`${deployname}:\\s+Image:\\s+.*`, 'm');
             const image = stdout.match(re)[0];
-            console.log(image);
 
             if (image) {
                 tag = image.slice(image.lastIndexOf(':') + 1);
