@@ -235,15 +235,21 @@ const patchDeployment = async (namespace, name, patchData) => {
 };
 
 const getRevisions = async (namespace, deployname) => {
+    console.log('exec', `kubectl rollout history deployment ${deployname} -n ${namespace}`);
     const { hist, histerr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace}`);
+    console.log(hist);
     revisions = hist.split('\n').slice(2).reverse().flatMap(async rev => {
         rev = rev.split(' ')[0];
-
+        console.log(rev);
+        console.log('exec', `kubectl rollout history deployment ${deployname} -n ${namespace} --revision=${rev}`);
         const { det, deterr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace} --revision=${rev}`);
+        console.log(det);
         const re = RegExp(`${deployname}:\\s+Image:\\s+.*`, 'm');
         image = det.match(re)[0];
+        console.log(image);
         if (image) {
             tag = image.slice(image.lastIndexOf(':') + 1);
+            console.log(tag);
             return `${rev}\\t${tag}`;
         }
 
