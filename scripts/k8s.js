@@ -238,14 +238,11 @@ const getRevisions = async (namespace, deployname) => {
     try {
         const revisions = [];
         const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace}`);
-        console.log(stdout.replace(/\n\s+/m, '').split('\n').slice(2).reverse());
 
-        revisions.push(stdout.replace(/\n\s+/m, '').split('\n').slice(2).reverse().flatMap(rev => {
+        revisions.push(stdout.replace(/\n\s+/m, '').split('\n').slice(2).reverse().flatMap(async rev => {
             rev = rev.split(/ +/)[0];
-            console.log(rev);
-            console.log('exec', `kubectl rollout history deployment ${deployname} -n ${namespace} --revision=${rev}`);
-            /* const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace} --revision=${rev}`);
-            console.log(stdout);
+
+            const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace} --revision=${rev}`);
             const re = RegExp(`${deployname}:\\s+Image:\\s+.*`, 'm');
             image = stdout.match(re)[0];
             console.log(image);
@@ -253,13 +250,14 @@ const getRevisions = async (namespace, deployname) => {
                 tag = image.slice(image.lastIndexOf(':') + 1);
                 console.log(tag);
                 return `${rev}\\t${tag}`;
-            } */
+            }
 
             return `${rev}\t`;
         }));
 
         return revisions;
     } catch (err) {
+        console.log("err: ", err);
         throw err;
     }
 };
