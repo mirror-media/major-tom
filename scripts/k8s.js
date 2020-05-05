@@ -263,17 +263,11 @@ const getRevisions = async (namespace, deployName) => {
 
 const rollbackDeployment = async (namespace, deployName, revision) => {
     try {
-        console.log(`exec`, `kubectl rollout undo deployment ${deployName} --to-revision=${revision} -n ${namespace}`);
         const { stdout, stderr } = await sh(`kubectl rollout undo deployment ${deployName} --to-revision=${revision} -n ${namespace}`);
-        console.log(stdout);
-        console.log(stderr);
 
-        if (stderr) return `Rollback failed due to error: ${stderr}.`;
-
-        return `*${deployName}* rolled back to revision \`${revision}\`.`;
+        return `${stdout}`;
     } catch (err) {
-        console.log(err);
-        throw `err: ${err}`;
+        throw err;
     }
 };
 
@@ -305,5 +299,6 @@ module.exports = {
     getDeployVersion,
     uploadDist,
     patchDeployment,
-    getRevisions
+    getRevisions,
+    rollbackDeployment
 };

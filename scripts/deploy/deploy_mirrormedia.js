@@ -127,9 +127,10 @@ module.exports = function (robot) {
 
         try {
             const result = await rollbackDeployment('default', deployName, revision);
-            msg.send(`${result}`);
+            msg.send(`${result} to revision \`${revision} \``);
         } catch (err) {
-            msg.send(err);
+            console.log(err)
+            msg.send(`Rollback failed due to an error: ${err}.`);
         }
     });
 };

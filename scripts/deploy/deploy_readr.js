@@ -126,7 +126,7 @@ module.exports = function (robot) {
     });
 
     robot.respond(/rollback\s+rr\s+([^\s]+)\s+(\d+)/i, async (msg) => {
-        const deployname = msg.match[1];
+        const deployName = msg.match[1];
         const revision = msg.match[2];
 
         const matches = allowedServices.filter(s => s === deployName.toLowerCase());
@@ -134,9 +134,10 @@ module.exports = function (robot) {
 
         try {
             const result = await rollbackDeployment('default', deployName, revision);
-            msg.send(`${result}`);
+            msg.send(`${result} to revision \`${revision} \``);
         } catch (err) {
-            msg.send(err);
+            console.log(err)
+            msg.send(`Rollback failed due to an error: ${err}.`);
         }
     });
 };
