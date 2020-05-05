@@ -135,7 +135,7 @@ module.exports = function (robot) {
 
         try {
             const result = await rollbackDeployment('default', deployName, revision);
-            msg.send(`*${result.replace('\n', '')} to revision* \`${revision}\``);
+            msg.send(`${result}`);
         } catch (err) {
             console.log(err)
             msg.send(`error: ${err}`);
