@@ -112,7 +112,8 @@ module.exports = function (robot) {
         try {
             const revisions = await getRevisions('default', deployName);
             msg.send(`*${deployName}* revisions:\n${revisions.join('\n')}`);
-        } catch (error) {
+        } catch (err) {
+            console.log(err);
             msg.send('No revisions.');
         }
     });
