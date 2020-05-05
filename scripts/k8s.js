@@ -239,7 +239,7 @@ const getRevisions = async (namespace, deployname) => {
         const revisions = [];
         const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace}`);
 
-        await stdout.replace(/\n\s+/m, '').split('\n').slice(2).reverse().forEach(async rev => {
+        await Promise.all(stdout.replace(/\n\s+/m, '').split('\n').slice(2).map(async rev => {
             rev = rev.split(/ +/)[0];
 
             const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployname} -n ${namespace} --revision=${rev}`);
@@ -252,10 +252,10 @@ const getRevisions = async (namespace, deployname) => {
             }
 
             revisions.push(`#${rev}`)
-        });
+        }));
 
         console.log(revisions);
-        return revisions;
+        return revisions.sort().reverse();
     } catch (err) {
         console.log(err);
         throw err;
