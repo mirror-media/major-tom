@@ -236,10 +236,9 @@ const patchDeployment = async (namespace, name, patchData) => {
 
 const getRevisions = async (namespace, deployName) => {
     try {
-        const revisions = [];
         const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployName} -n ${namespace}`);
 
-        await Promise.all(stdout.replace(/\n\s+/m, '').split('\n').slice(2).map(async rev => {
+        const revisions = await Promise.all(stdout.replace(/\n\s+/m, '').split('\n').slice(2).map(async rev => {
             rev = rev.split(/ +/)[0];
 
             const { stdout, stderr } = await sh(`kubectl rollout history deployment ${deployName} -n ${namespace} --revision=${rev}`);
@@ -248,13 +247,14 @@ const getRevisions = async (namespace, deployName) => {
 
             if (image) {
                 tag = image.slice(image.lastIndexOf(':') + 1);
-                revisions.push(`${rev}:\t${tag}`)
-            } else {
-                revisions.push(`#${rev}:\t`)
+                return `${rev}:\t${tag}`;
             }
+
+            return `#${rev}:\t`;
         }));
 
-        return revisions.sort().reverse();
+        var collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+        return revisions.sort(collator.compare).reverse();
     } catch (err) {
         throw err;
     }
