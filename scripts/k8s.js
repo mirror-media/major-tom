@@ -263,7 +263,7 @@ const getRevisions = async (namespace, deployName) => {
 const rollbackDeployment = async (namespace, deployName, revision) => {
     try {
         const { stdout, stderr } = await sh(`kubectl rollout undo deployment ${deployName} --to-revision=${revision} -n ${namespace}`);
-        const successMessage = !stdout.includes('(') ? `*to revision* \`${revision}\` @Tin ` : ``;
+        const successMessage = !stdout.includes('(') ? `*to revision* \`${revision}\` @here ` : ``;
         return `*${stdout.replace('\n', '')}* ${successMessage}`;
     } catch (err) {
         throw err;
@@ -274,7 +274,7 @@ const getReplicas = async (namespace, deployName) => {
     try {
         const { stdout, stderr } = await sh(`kubectl get deployments ${deployName} -n ${namespace}`);
         const replicas = stdout.split('\n')[1].split(/ +/)[1];
-        return `*${deployName}* replicas (ready/total): ${replicas}`;
+        return `*${deployName}* replicas: ${replicas}`;
     } catch (err) {
         throw err;
     }
@@ -283,8 +283,9 @@ const getReplicas = async (namespace, deployName) => {
 const setReplicas = async (namespace, deployName, currentReplicas, assignedReplicas) => {
     try {
         const { stdout, stderr } = await sh(`kubectl scale deployment ${deployName} --current-replicas=${currentReplicas} --replicas=${assignedReplicas} -n ${namespace}`);
-        const successMessage = stdout.includes('scaled') ? `*from* \`${currentReplicas}\` *to* \`${assignedReplicas}\` @Tin Chen` : ``;
-        return `*${stdout.replace('\n', '')}* ${successMessage} \n *This command is no use to *GitOps* deployments managed by Helm Operator.`;
+        const message = stderr ? `${stderr}`
+            : `*${stdout.replace('\n', '')} from* \`${currentReplicas}\` *to* \`${assignedReplicas}\` @here \n *This command is no use to *GitOps* deployments managed by Helm Operator.`
+        return `${message}`;
     } catch (err) {
         throw err;
     }
