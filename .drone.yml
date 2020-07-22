@@ -175,7 +175,7 @@ pipeline:
 
   deploy-readr-new-cluster:
     image: nytimes/drone-gke
-    region: asia-east1
+    region: asia-east-1
     cluster: readr-prod
     namespace: default
     # For debugging
