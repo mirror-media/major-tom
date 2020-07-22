@@ -1,0 +1,36 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: {{.app}}
+  name: {{.app}}
+  namespace: default
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: {{.app}}
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: {{.app}}
+    spec:
+      containers:
+      - env:
+        - name: HUBOT_SLACK_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: HUBOT_SLACK_TOKEN
+              name: hubot
+        image: {{.image}}
+        imagePullPolicy: Always
+        name: {{.app}}
+      restartPolicy: Always
+      serviceAccount: hubot
+      serviceAccountName: hubot
