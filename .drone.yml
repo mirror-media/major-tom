@@ -175,14 +175,14 @@ pipeline:
 
   deploy-readr-new-cluster:
     image: nytimes/drone-gke
-    zone: asia-east1-a
+    region: asia-east1
     cluster: readr-prod
     namespace: default
     # For debugging
     dry_run: false
     verbose: true
     secrets:
-      - source: google_credentials
+      - source: google_credentials_readr_prod_cluster
         target: token
     template: manifests/major-tom/readr.yaml
     vars:
