@@ -158,7 +158,7 @@ pipeline:
     commands:
     - rm -f scripts/deploy_*.js 
     - cp configs/readr-media/major-tom/.env .env
-    - cp scripts/deploy/deploy_readr.js ./scripts/deploy_readr_prod.js
+    - cp scripts/deploy/deploy_readr_prod.js ./scripts/deploy_readr_prod.js
     - npm install
     when:
       event: tag
@@ -182,9 +182,9 @@ pipeline:
     dry_run: false
     verbose: true
     secrets:
-      - source: google_credentials_readr_prod_cluster
+      - source: google_credentials
         target: token
-    template: manifests/major-tom/readr-new-cluster.yaml
+    template: manifests/major-tom/readr.yaml
     vars:
       image: gcr.io/mirrormedia-1470651750304/${DRONE_REPO_NAME}:readr-new-cluster-${DRONE_TAG}
       app: major-tom
