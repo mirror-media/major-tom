@@ -1,9 +1,9 @@
 const { getDeployVersion, uploadDist, patchDeployment, getRevisions, rollbackDeployment, getReplicas, setReplicas } = require('./k8s.js');
 const { addImageTag, getGCRVersion } = require('./gcr.js');
 
-const allowedServices = [
-    "readr-cms"
-];
+const allowedServices = {
+    "readr-cms": "openwarehouse-readr",
+};
 
 module.exports = function (robot) {
     robot.respond(/assemble/i, (msg) => {
@@ -12,7 +12,7 @@ module.exports = function (robot) {
 
     robot.respond(/version\s+rrn\s+([^\s]+)/i, async (msg) => {
         const deployName = msg.match[1];
-        const matches = allowedServices.filter(s => s === deployName.toLowerCase());
+        const matches = Object.keys(allowedServices).filter(s => s === deployName.toLowerCase());
         if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
 
         try {
@@ -31,7 +31,7 @@ module.exports = function (robot) {
         const deployName = msg.match[1];
         const versionTag = msg.match[2];
 
-        const matches = allowedServices.filter(s => s === deployName.toLowerCase());
+        const matches = Object.keys(allowedServices).filter(s => s === deployName.toLowerCase());
         if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
 
         if (versionTag.split(" ").length != 2) {
@@ -40,7 +40,7 @@ module.exports = function (robot) {
             const devTag = versionTag.split(" ")[0];
             const prodTag = versionTag.split(" ")[1];
 
-            addImageTag(deployName, devTag, prodTag, (err, fullDevTag) => {
+            addImageTag(allowedServices[deployName], devTag, prodTag, (err, fullDevTag) => {
                 if (err) {
                     console.log(err);
                     return msg.send(`Updating deployment ${deployName} error: ${err}`);
@@ -53,7 +53,7 @@ module.exports = function (robot) {
 
     robot.respond(/revisions\s+rrn\s+([^\s]+)/i, async (msg) => {
         const deployName = msg.match[1];
-        const matches = allowedServices.filter(s => s === deployName.toLowerCase());
+        const matches = Object.keys(allowedServices).filter(s => s === deployName.toLowerCase());
         if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
 
         try {
@@ -69,7 +69,7 @@ module.exports = function (robot) {
         const deployName = msg.match[1];
         const revision = msg.match[2];
 
-        const matches = allowedServices.filter(s => s === deployName.toLowerCase());
+        const matches = Object.keys(allowedServices).filter(s => s === deployName.toLowerCase());
         if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
 
         try {
@@ -83,7 +83,7 @@ module.exports = function (robot) {
 
     robot.respond(/replicas\s+rrn\s+([^\s]+)/i, async (msg) => {
         const deployName = msg.match[1];
-        const matches = allowedServices.filter(s => s === deployName.toLowerCase());
+        const matches = Object.keys(allowedServices).filter(s => s === deployName.toLowerCase());
         if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
 
         try {
@@ -99,7 +99,7 @@ module.exports = function (robot) {
         const deployName = msg.match[1];
         const currentReplicas = msg.match[2];
         const assignedReplicas = msg.match[3];
-        const matches = allowedServices.filter(s => s === deployName.toLowerCase());
+        const matches = Object.keys(allowedServices).filter(s => s === deployName.toLowerCase());
         if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
 
         try {
