@@ -3,6 +3,7 @@ const { addImageTag, getGCRVersion } = require('./gcr.js');
 
 const allowedServices = {
     "readr-cms": "openwarehouse-readr",
+    "readr-nuxt": "readr-nuxt",
 };
 
 module.exports = function (robot) {
