@@ -4,6 +4,7 @@ const { addImageTag, getGCRVersion } = require('./gcr.js');
 const allowedServices = {
     "readr-cms": "openwarehouse-readr",
     "readr-nuxt": "readr-nuxt",
+    "open-relationship": "open-relationship",
 };
 
 module.exports = function (robot) {
