@@ -1,0 +1,276 @@
+---
+kind: pipeline
+type: docker
+name: default
+
+platform:
+  os: linux
+  arch: amd64
+
+workspace:
+  base: /ci
+  path: major-tom
+
+steps:
+- name: start_slack
+  pull: if-not-exists
+  image: plugins/slack
+  settings:
+    icon_url: https://avatars2.githubusercontent.com/u/2181346?s=200&v=4
+    recipient: mmich
+    template: "*start* <${DRONE_BUILD_LINK}|building> *{{repo.name}}*.\n"
+    username: drone
+  environment:
+    SLACK_WEBHOOK:
+      from_secret: slack_webhook
+  when:
+    branch:
+    - master
+    - dev
+    event:
+    - push
+    - tag
+
+- name: get-readr-config
+  pull: if-not-exists
+  image: gcr.io/mirrormedia-1470651750304/drone-cloud-sdk:latest
+  commands:
+  - gcloud source repos clone configs configs
+  - cp configs/readr-media/major-tom/.env .env
+  - cp configs/major-tom/gcskeyfile.json ./gcskeyfile.json
+  - rm -rf configs
+  environment:
+    GOOGLE_CREDENTIALS:
+      from_secret: google_credentials
+  when:
+    branch:
+    - dev
+    event:
+    - push
+    - tag
+
+- name: build-dev
+  pull: if-not-exists
+  image: node
+  commands:
+  - rm -f scripts/deploy_*.js
+  - cp scripts/deploy/deploy_dev.js ./scripts/deploy_dev.js
+  - npm install
+  when:
+    branch:
+    - dev
+    event:
+    - push
+
+- name: publish-dev
+  pull: if-not-exists
+  image: plugins/gcr
+  settings:
+    group: build
+    repo: mirrormedia-1470651750304/${DRONE_REPO_NAME}
+    tag: dev-${DRONE_COMMIT_SHA:0:7}
+  environment:
+    DOCKER_LAUNCH_DEBUG: true
+    GOOGLE_CREDENTIALS:
+      from_secret: google_credentials
+  when:
+    branch:
+    - dev
+    event:
+    - push
+
+- name: deploy-dev
+  pull: if-not-exists
+  image: nytimes/drone-gke:develop
+  settings:
+    cluster: dev
+    namespace: default
+    template: manifests/major-tom/dev.yaml
+    vars:
+      app: major-tom
+      image: gcr.io/mirrormedia-1470651750304/${DRONE_REPO_NAME}:dev-${DRONE_COMMIT_SHA:0:7}
+    verbose: true
+    zone: asia-east1-a
+  environment:
+    TOKEN:
+      from_secret: google_credentials
+  when:
+    branch:
+    - dev
+    event:
+    - push
+
+- name: pull-config
+  pull: if-not-exists
+  image: gcr.io/mirrormedia-1470651750304/drone-cloud-sdk:latest
+  commands:
+  - gcloud source repos clone configs configs
+  - cp configs/major-tom/gcskeyfile.json ./gcskeyfile.json
+  environment:
+    GOOGLE_CREDENTIALS:
+      from_secret: google_credentials
+  when:
+    event:
+    - tag
+
+- name: build-readr
+  pull: if-not-exists
+  image: node
+  commands:
+  - rm -f scripts/deploy_*.js
+  - cp configs/readr-media/major-tom/.env .env
+  - cp scripts/deploy/deploy_readr.js ./scripts/deploy_readr.js
+  - npm install
+  when:
+    event:
+    - tag
+
+- name: publish-readr
+  pull: if-not-exists
+  image: plugins/gcr
+  settings:
+    repo: mirrormedia-1470651750304/${DRONE_REPO_NAME}
+    tag: readr-${DRONE_TAG}
+  environment:
+    DOCKER_LAUNCH_DEBUG: true
+    GOOGLE_CREDENTIALS:
+      from_secret: google_credentials
+  when:
+    event:
+    - tag
+
+- name: deploy-readr
+  pull: if-not-exists
+  image: nytimes/drone-gke
+  settings:
+    cluster: prod-readr
+    namespace: default
+    template: manifests/major-tom/readr.yaml
+    vars:
+      app: major-tom
+      image: gcr.io/mirrormedia-1470651750304/${DRONE_REPO_NAME}:readr-${DRONE_TAG}
+    verbose: true
+    zone: asia-east1-a
+  environment:
+    TOKEN:
+      from_secret: google_credentials
+  when:
+    event:
+    - tag
+
+- name: build-mirrormedia
+  pull: if-not-exists
+  image: node
+  commands:
+  - rm -f scripts/deploy_*.js
+  - cp configs/mirror-media/major-tom/.env .env
+  - cp scripts/deploy/deploy_mirrormedia.js scripts/deploy_mirrormedia.js
+  - npm install
+  settings:
+    group: build
+  when:
+    event:
+    - tag
+
+- name: publish-mirrormedia
+  pull: if-not-exists
+  image: plugins/gcr
+  settings:
+    repo: mirrormedia-1470651750304/${DRONE_REPO_NAME}
+    tag: mirrormedia-${DRONE_TAG}
+  environment:
+    DOCKER_LAUNCH_DEBUG: true
+    GOOGLE_CREDENTIALS:
+      from_secret: google_credentials
+  when:
+    event:
+    - tag
+
+- name: deploy-mirrormedia
+  pull: if-not-exists
+  image: nytimes/drone-gke
+  settings:
+    cluster: mirrormedia-production
+    namespace: default
+    template: manifests/major-tom/mirrormedia.yaml
+    vars:
+      app: major-tom
+      image: gcr.io/mirrormedia-1470651750304/${DRONE_REPO_NAME}:mirrormedia-${DRONE_TAG}
+    verbose: true
+    zone: asia-east1-a
+  environment:
+    TOKEN:
+      from_secret: google_credentials
+  when:
+    event:
+    - tag
+
+- name: build-readr-new-cluster
+  pull: if-not-exists
+  image: node
+  commands:
+  - rm -f scripts/deploy_*.js
+  - cp configs/readr-media/major-tom/.env .env
+  - cp scripts/deploy/deploy_readr_prod.js ./scripts/deploy_readr_prod.js
+  - npm install
+  when:
+    event:
+    - tag
+
+- name: publish-readr-new-cluster
+  pull: if-not-exists
+  image: plugins/gcr
+  settings:
+    repo: mirrormedia-1470651750304/${DRONE_REPO_NAME}
+    tag: readr-new-cluster-${DRONE_TAG}
+  environment:
+    DOCKER_LAUNCH_DEBUG: true
+    GOOGLE_CREDENTIALS:
+      from_secret: google_credentials
+  when:
+    event:
+    - tag
+
+- name: deploy-readr-new-cluster
+  pull: if-not-exists
+  image: nytimes/drone-gke
+  settings:
+    cluster: readr-prod
+    namespace: default
+    region: asia-east1
+    template: manifests/major-tom/readr.yaml
+    vars:
+      app: major-tom
+      image: gcr.io/mirrormedia-1470651750304/${DRONE_REPO_NAME}:readr-new-cluster-${DRONE_TAG}
+    verbose: true
+  environment:
+    TOKEN:
+      from_secret: google_credentials
+  when:
+    event:
+    - tag
+
+- name: finish-slack
+  pull: if-not-exists
+  image: plugins/slack
+  settings:
+    icon_url: https://avatars2.githubusercontent.com/u/2181346?s=200&v=4
+    recipient: mmich
+    template: "{{#success build.status}}\n  Build<${DRONE_BUILD_LINK}|#{{build.number}}> *success* ${DRONE_REPO_NAME} was updated.\n{{else}}\n  Houston, we have a problem. Build <${DRONE_BUILD_LINK}|#{{build.number}}> failed. Fix me please.\n{{/success}}"
+    username: drone
+  environment:
+    SLACK_WEBHOOK:
+      from_secret: slack_webhook
+  when:
+    branch:
+    - master
+    - dev
+    event:
+    - push
+    - tag
+    status:
+    - success
+    - failure
+
+image_pull_secrets:
+  - gcr_docker_config
