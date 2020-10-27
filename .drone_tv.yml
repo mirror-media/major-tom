@@ -12,7 +12,7 @@ workspace:
   path: major-tom
 
 steps:
-- name: start_slack
+- name: start-slack
   pull: if-not-exists
   image: plugins/slack
   settings:
@@ -31,224 +31,52 @@ steps:
     - push
     - tag
 
-- name: get-readr-config
+- name: get-tv-config
   pull: if-not-exists
-  image: gcr.io/mirrormedia-1470651750304/drone-cloud-sdk:latest
+  image: gcr.io/mirror-tv-275709/drone-cloud-sdk:latest
   commands:
-  - gcloud source repos clone configs configs
-  - cp configs/readr-media/major-tom/.env .env
-  - cp configs/major-tom/gcskeyfile.json ./gcskeyfile.json
-  - rm -rf configs
+      - gcloud source repos clone configs configs
+      - cp configs/major-tom/gcskeyfile.json ./gcskeyfile.json
+      - rm -rf configs
   environment:
     GOOGLE_CREDENTIALS:
       from_secret: google_credentials
   when:
     branch:
-    - dev
+      - master
     event:
-    - push
-    - tag
+      - push
+      - tag
 
-- name: build-dev
+- name: build-tv
   pull: if-not-exists
   image: node
   commands:
-  - rm -f scripts/deploy_*.js
-  - cp scripts/deploy/deploy_dev.js ./scripts/deploy_dev.js
-  - npm install
+    - rm -f scripts/deploy_*.js
+    - cp scripts/deploy/deploy_tv.js script/deploy_tv.js
+    - npm install
   when:
     branch:
+    - master
     - dev
     event:
     - push
 
-- name: publish-dev
+- name: publish-tv
   pull: if-not-exists
   image: plugins/gcr
-  settings:
+  settings: 
     group: build
-    repo: mirrormedia-1470651750304/${DRONE_REPO_NAME}
+    repo: mirror-tv-275709/${DRONE_REPO_NAME}
     tag: dev-${DRONE_COMMIT_SHA:0:7}
-  environment:
-    DOCKER_LAUNCH_DEBUG: true
-    GOOGLE_CREDENTIALS:
-      from_secret: google_credentials
-  when:
-    branch:
-    - dev
-    event:
-    - push
 
-- name: deploy-dev
-  pull: if-not-exists
-  image: nytimes/drone-gke:develop
-  settings:
-    cluster: dev
-    namespace: default
-    template: manifests/major-tom/dev.yaml
-    vars:
-      app: major-tom
-      image: gcr.io/mirrormedia-1470651750304/${DRONE_REPO_NAME}:dev-${DRONE_COMMIT_SHA:0:7}
-    verbose: true
-    zone: asia-east1-a
-  environment:
-    TOKEN:
-      from_secret: google_credentials
-  when:
-    branch:
-    - dev
-    event:
-    - push
-
-- name: pull-config
-  pull: if-not-exists
-  image: gcr.io/mirrormedia-1470651750304/drone-cloud-sdk:latest
-  commands:
-  - gcloud source repos clone configs configs
-  - cp configs/major-tom/gcskeyfile.json ./gcskeyfile.json
-  environment:
-    GOOGLE_CREDENTIALS:
-      from_secret: google_credentials
-  when:
-    event:
-    - tag
-
-- name: build-readr
-  pull: if-not-exists
-  image: node
-  commands:
-  - rm -f scripts/deploy_*.js
-  - cp configs/readr-media/major-tom/.env .env
-  - cp scripts/deploy/deploy_readr.js ./scripts/deploy_readr.js
-  - npm install
-  when:
-    event:
-    - tag
-
-- name: publish-readr
-  pull: if-not-exists
-  image: plugins/gcr
-  settings:
-    repo: mirrormedia-1470651750304/${DRONE_REPO_NAME}
-    tag: readr-${DRONE_TAG}
-  environment:
-    DOCKER_LAUNCH_DEBUG: true
-    GOOGLE_CREDENTIALS:
-      from_secret: google_credentials
-  when:
-    event:
-    - tag
-
-- name: deploy-readr
+- name: deploy-tv
   pull: if-not-exists
   image: nytimes/drone-gke
   settings:
-    cluster: prod-readr
+    cluster: tv-prod
     namespace: default
-    template: manifests/major-tom/readr.yaml
-    vars:
-      app: major-tom
-      image: gcr.io/mirrormedia-1470651750304/${DRONE_REPO_NAME}:readr-${DRONE_TAG}
-    verbose: true
-    zone: asia-east1-a
-  environment:
-    TOKEN:
-      from_secret: google_credentials
-  when:
-    event:
-    - tag
-
-- name: build-mirrormedia
-  pull: if-not-exists
-  image: node
-  commands:
-  - rm -f scripts/deploy_*.js
-  - cp configs/mirror-media/major-tom/.env .env
-  - cp scripts/deploy/deploy_mirrormedia.js scripts/deploy_mirrormedia.js
-  - npm install
-  settings:
-    group: build
-  when:
-    event:
-    - tag
-
-- name: publish-mirrormedia
-  pull: if-not-exists
-  image: plugins/gcr
-  settings:
-    repo: mirrormedia-1470651750304/${DRONE_REPO_NAME}
-    tag: mirrormedia-${DRONE_TAG}
-  environment:
-    DOCKER_LAUNCH_DEBUG: true
-    GOOGLE_CREDENTIALS:
-      from_secret: google_credentials
-  when:
-    event:
-    - tag
-
-- name: deploy-mirrormedia
-  pull: if-not-exists
-  image: nytimes/drone-gke
-  settings:
-    cluster: mirrormedia-production
-    namespace: default
-    template: manifests/major-tom/mirrormedia.yaml
-    vars:
-      app: major-tom
-      image: gcr.io/mirrormedia-1470651750304/${DRONE_REPO_NAME}:mirrormedia-${DRONE_TAG}
-    verbose: true
-    zone: asia-east1-a
-  environment:
-    TOKEN:
-      from_secret: google_credentials
-  when:
-    event:
-    - tag
-
-- name: build-readr-new-cluster
-  pull: if-not-exists
-  image: node
-  commands:
-  - rm -f scripts/deploy_*.js
-  - cp configs/readr-media/major-tom/.env .env
-  - cp scripts/deploy/deploy_readr_prod.js ./scripts/deploy_readr_prod.js
-  - npm install
-  when:
-    event:
-    - tag
-
-- name: publish-readr-new-cluster
-  pull: if-not-exists
-  image: plugins/gcr
-  settings:
-    repo: mirrormedia-1470651750304/${DRONE_REPO_NAME}
-    tag: readr-new-cluster-${DRONE_TAG}
-  environment:
-    DOCKER_LAUNCH_DEBUG: true
-    GOOGLE_CREDENTIALS:
-      from_secret: google_credentials
-  when:
-    event:
-    - tag
-
-- name: deploy-readr-new-cluster
-  pull: if-not-exists
-  image: nytimes/drone-gke
-  settings:
-    cluster: readr-prod
-    namespace: default
-    region: asia-east1
-    template: manifests/major-tom/readr.yaml
-    vars:
-      app: major-tom
-      image: gcr.io/mirrormedia-1470651750304/${DRONE_REPO_NAME}:readr-new-cluster-${DRONE_TAG}
-    verbose: true
-  environment:
-    TOKEN:
-      from_secret: google_credentials
-  when:
-    event:
-    - tag
+    template: manifests/major-tom/tv.yaml
 
 - name: finish-slack
   pull: if-not-exists

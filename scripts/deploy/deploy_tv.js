@@ -1,5 +1,5 @@
 const { getDeployVersion, uploadDist, patchDeployment, getRevisions, rollbackDeployment, getReplicas, setReplicas } = require('./k8s.js');
-const { addImageTag, getGCRVersion } = require('./gcr.js');
+const { addImageTag, getGCRVersion } = require('./gcr_tv.js');
 
 const allowedServices = {
     //slack指令名稱:gcr repo名稱
@@ -12,7 +12,7 @@ module.exports = function (robot) {
         msg.send('I am the bone of my sword');
     });
 
-    robot.respond(/version\s+rrn\s+([^\s]+)/i, async (msg) => {
+    robot.respond(/version\s+tv\s+([^\s]+)/i, async (msg) => {
         const deployName = msg.match[1];
         const matches = Object.keys(allowedServices).filter(s => s === deployName.toLowerCase());
         if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
@@ -28,7 +28,7 @@ module.exports = function (robot) {
         }
     });
 
-    robot.respond(/deploy\s+rrn\s+([^\s]+)\s+(.+)/i, async (msg) => {
+    robot.respond(/deploy\s+tv\s+([^\s]+)\s+(.+)/i, async (msg) => {
         msg.send('Launching deploy sequences');
         const deployName = msg.match[1];
         const versionTag = msg.match[2];
@@ -37,7 +37,7 @@ module.exports = function (robot) {
         if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
 
         if (versionTag.split(" ").length != 2) {
-            return msg.send('Invalid deploy command. Should specify the deploy version tag. \n e.g. deploy rr readr-restful dev_Falsechord_711 1.1.0')
+            return msg.send('Invalid deploy command. Should specify the deploy version tag. \n e.g. deploy tv mirror-tv-cms dev_Falsechord_711 1.1.0')
         } else {
             const devTag = versionTag.split(" ")[0];
             const prodTag = versionTag.split(" ")[1];
@@ -53,7 +53,7 @@ module.exports = function (robot) {
         }
     });
 
-    robot.respond(/revisions\s+rrn\s+([^\s]+)/i, async (msg) => {
+    robot.respond(/revisions\s+tv\s+([^\s]+)/i, async (msg) => {
         const deployName = msg.match[1];
         const matches = Object.keys(allowedServices).filter(s => s === deployName.toLowerCase());
         if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
@@ -67,7 +67,7 @@ module.exports = function (robot) {
         }
     });
 
-    robot.respond(/rollback\s+rrn\s+([^\s]+)\s+(\d+)/i, async (msg) => {
+    robot.respond(/rollback\s+tv\s+([^\s]+)\s+(\d+)/i, async (msg) => {
         const deployName = msg.match[1];
         const revision = msg.match[2];
 
@@ -83,7 +83,7 @@ module.exports = function (robot) {
         }
     });
 
-    robot.respond(/replicas\s+rrn\s+([^\s]+)/i, async (msg) => {
+    robot.respond(/replicas\s+tv\s+([^\s]+)/i, async (msg) => {
         const deployName = msg.match[1];
         const matches = Object.keys(allowedServices).filter(s => s === deployName.toLowerCase());
         if (matches.length == 0) return msg.send(`${deployName} is not on allowed list`);
@@ -97,7 +97,7 @@ module.exports = function (robot) {
         }
     });
 
-    robot.respond(/scale\s+rrn\s+([^\s]+)\s+(\d+)\s+(\d+)/i, async (msg) => {
+    robot.respond(/scale\s+tv\s+([^\s]+)\s+(\d+)\s+(\d+)/i, async (msg) => {
         const deployName = msg.match[1];
         const currentReplicas = msg.match[2];
         const assignedReplicas = msg.match[3];
