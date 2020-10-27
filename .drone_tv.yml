@@ -52,7 +52,7 @@ steps:
   pull: if-not-exists
   image: node
   commands:
-    - rm -f scripts/deploy_*.js
+    # - rm -f scripts/deploy_*.js
     - cp scripts/deploy/deploy_tv.js script/deploy_tv.js
     - npm install
   when:
