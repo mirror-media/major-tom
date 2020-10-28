@@ -1,5 +1,5 @@
 const { getDeployVersion, uploadDist, patchDeployment, getRevisions, rollbackDeployment, getReplicas, setReplicas } = require('./k8s.js');
-const { addImageTag, getGCRVersion } = require('./gcr_tv.js');
+const { addImageTag, getGCRVersion } = require('./gcr.js');
 
 const allowedServices = {
     //slack指令名稱:gcr repo名稱
