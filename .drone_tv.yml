@@ -53,7 +53,7 @@ steps:
   image: node:major-tom
   commands:
     # - rm -f scripts/deploy_*.js
-    - cp scripts/deploy/deploy_tv.js script/deploy_tv.js
+    # - cp scripts/deploy/deploy_tv.js script/deploy_tv.js
     - npm install
   when:
     branch:
