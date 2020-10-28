@@ -81,7 +81,7 @@ steps:
     namespace: default
     template: manifests/major-tom/tv.yaml
   environment:
-    GOOGLE_CREDENTIALS:
+    TOKEN:
       from_secret: google_credentials
 
 - name: finish-slack
