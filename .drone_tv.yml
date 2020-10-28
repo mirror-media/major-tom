@@ -50,7 +50,7 @@ steps:
 
 - name: build-tv
   pull: if-not-exists
-  image: node
+  image: node:major-tom
   commands:
     # - rm -f scripts/deploy_*.js
     - cp scripts/deploy/deploy_tv.js script/deploy_tv.js
