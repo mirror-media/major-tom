@@ -80,6 +80,7 @@ steps:
     cluster: tv-prod
     namespace: default
     template: manifests/major-tom/tv.yaml
+    zone: asia-east1-c
   environment:
     TOKEN:
       from_secret: google_credentials
