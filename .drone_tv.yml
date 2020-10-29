@@ -80,10 +80,11 @@ steps:
     cluster: tv-prod
     namespace: default
     template: manifests/major-tom/tv.yaml
+    vars:
+      image: gcr.io/mirror-tv-275709/${DRONE_REPO_NAME}:dev-${DRONE_COMMIT_SHA:0:7}
+      app: major-tom
     zone: asia-east1-c
-  vars:
-    image: gcr.io/mirror-tv-275709/${DRONE_REPO_NAME}:dev-${DRONE_COMMIT_SHA:0:7}
-    app: major-tom
+  
   environment:
     TOKEN:
       from_secret: google_credentials
