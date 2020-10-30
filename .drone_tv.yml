@@ -21,7 +21,7 @@ steps:
     template: "*start* <${DRONE_BUILD_LINK}|building> *{{repo.name}}*.\n"
     username: drone
   environment:
-    SLACK_WEBHOOK:
+    slack_webhook:
       from_secret: slack_webhook
   when:
     branch:
@@ -98,7 +98,7 @@ steps:
     template: "{{#success build.status}}\n  Build<${DRONE_BUILD_LINK}|#{{build.number}}> *success* ${DRONE_REPO_NAME} was updated.\n{{else}}\n  Houston, we have a problem. Build <${DRONE_BUILD_LINK}|#{{build.number}}> failed. Fix me please.\n{{/success}}"
     username: drone
   environment:
-    SLACK_WEBHOOK:
+    slack_webhook:
       from_secret: slack_webhook
   when:
     branch:
