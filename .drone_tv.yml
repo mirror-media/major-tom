@@ -16,13 +16,14 @@ steps:
   pull: if-not-exists
   image: plugins/slack
   settings:
+    webhook:
+      from_secret: slack_webhook
+    channel: jenkins
     icon_url: https://avatars2.githubusercontent.com/u/2181346?s=200&v=4
     recipient: mmich
     template: "*start* <${DRONE_BUILD_LINK}|building> *{{repo.name}}*.\n"
     username: drone
-  environment:
-    slack_webhook:
-      from_secret: slack_webhook
+ 
   when:
     branch:
     - master
@@ -93,13 +94,13 @@ steps:
   pull: if-not-exists
   image: plugins/slack
   settings:
+    webhook:
+      from_secret: slack_webhook
+    channel: jenkins
     icon_url: https://avatars2.githubusercontent.com/u/2181346?s=200&v=4
     recipient: mmich
     template: "{{#success build.status}}\n  Build<${DRONE_BUILD_LINK}|#{{build.number}}> *success* ${DRONE_REPO_NAME} was updated.\n{{else}}\n  Houston, we have a problem. Build <${DRONE_BUILD_LINK}|#{{build.number}}> failed. Fix me please.\n{{/success}}"
     username: drone
-  environment:
-    slack_webhook:
-      from_secret: slack_webhook
   when:
     branch:
     - master
