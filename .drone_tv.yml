@@ -14,7 +14,7 @@ workspace:
 steps:
 - name: start-slack
   pull: if-not-exists
-  image: plugins/slack
+  image: plugins/slack:1.3.0
   settings:
     webhook:
       from_secret: slack_webhook
@@ -91,7 +91,7 @@ steps:
 
 - name: finish-slack
   pull: if-not-exists
-  image: plugins/slack
+  image: plugins/slack:1.3.0
   settings:
     webhook:
       from_secret: slack_webhook
