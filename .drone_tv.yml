@@ -20,10 +20,9 @@ steps:
       from_secret: slack_webhook
     channel: jenkins
     icon_url: https://avatars2.githubusercontent.com/u/2181346?s=200&v=4
-    recipient: mmich
+    recipient: andy
     template: "*start* <${DRONE_BUILD_LINK}|building> *{{repo.name}}*.\n"
     username: drone
- 
   when:
     branch:
     - master
