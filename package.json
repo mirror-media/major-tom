@@ -6,6 +6,7 @@
   "description": "A simple robot for mirrormedia",
   "dependencies": {
     "@google-cloud/storage": "^1.6.0",
+    "coffee-script": "^1.12.6",
     "dotenv": "^8.2.0",
     "hubot": "^2.19.0",
     "hubot-diagnostics": "0.0.2",
